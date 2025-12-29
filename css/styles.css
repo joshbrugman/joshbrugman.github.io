@@ -1,0 +1,166 @@
+
+
+/* =====================
+   Base
+===================== */
+
+    body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    background: #fff;
+    }
+
+    .site-container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px;
+    }
+
+
+    /* =====================
+   Header
+===================== */
+
+
+    header {
+      text-align: center;
+      font-size: 34px;
+      margin-bottom: 60px;
+      color: #333;
+    }
+
+    header h1 {
+      margin-bottom: -50px;
+    }
+
+    
+    /* =====================
+   Navigation
+===================== */
+    
+
+    .header-links a {
+      margin: 0 15px;
+      margin-top: 0;
+      font-size: 18px;
+      color: #555;
+      text-decoration: none;
+    }
+
+    .header-links a:hover {
+      color: #777;
+    }
+
+    .nav-link[aria-current="page"] {
+      color: #777;
+      pointer-events: none;
+      cursor: default;
+    }
+
+    a {
+      color: #555;
+
+    }
+
+    /* =====================
+   Posts
+===================== */
+
+
+    article {
+    text-align: left;
+    margin-bottom: 50px;
+    color: #414040;
+    }
+
+    .post-title {
+    font-size: 32px;
+    margin: 10px 0;
+    font-weight: normal;
+    }
+
+    .post-date {
+    color: #777;
+    font-size: 14px;
+    }
+
+    p {
+    margin: 1em 0 1em 0;
+    }
+
+    .featured-image {
+    width: 100%;
+    border-radius: 4px;
+    margin: 20px 0;
+    }
+
+    .bio-image {
+    width: 50%;
+    border-radius: 4px;
+    margin: 20px 0;
+    }
+
+    .audio-player {
+    width: 100%;
+    margin: 12px 0 24px;
+    opacity: 0.75;
+    }
+
+    .post-split {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-top: 2em;
+    }
+
+    .about-text {
+      flex: 1;
+    }
+
+    .about-text p:first-child {
+      margin-top: 0;
+    }
+
+    .about-image {
+      flex: 1;
+    }
+
+    .about-image img {
+      width: 100%;
+      border-radius: 6px;
+      display: block;
+      flex: 1;
+    }
+
+    .about-frog-image {
+      width: 50%;
+      border-radius: 6px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* Mobile fallback */
+    @media (max-width: 700px) {
+      .about-split {
+        flex-direction: column;
+      }
+    }
+
+    /* =====================
+   Footer
+===================== */
+
+    footer {
+      border-top: 1px solid #ddd;
+      padding-top: 15px;
+      text-align: center;
+    }
+
+    footer .copyright {
+      color: #777;
+      font-size: 14px;
+    }
+
+    
