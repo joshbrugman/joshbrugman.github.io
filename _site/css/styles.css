@@ -19,6 +19,7 @@
     }
 
 
+
     /* =====================
    Header
 ===================== */
@@ -32,7 +33,15 @@
     }
 
     header h1 {
-      margin-bottom: -50px;
+      margin-top: -10px;
+      margin-bottom: 50px;
+      line-height: 1.1;
+    }
+
+    .header-frame {
+      width: 100%;
+      border: none;
+      height: 160px; /* match header height */
     }
 
     
@@ -42,8 +51,9 @@
     
 
     .header-links a {
-      margin: 0 15px;
+      /* margin: 0 15px; */
       margin-top: 0;
+      margin-bottom: -5px;
       font-size: 18px;
       color: #555;
       text-decoration: none;
@@ -52,6 +62,12 @@
     .header-links a:hover {
       color: #777;
     }
+
+    .header-links a:first-child {
+      margin-right: 60px; /* Increases space between the two links */
+      margin-left: -18px;  /* Pulls 'About' specifically to the left */
+    }
+
 
     .nav-link[aria-current="page"] {
       color: #777;
@@ -62,6 +78,78 @@
     a {
       color: #555;
     }
+
+    
+    /* =====================
+   About
+===================== */
+
+  /* 1. Set the container to Flex */
+  .post-split {
+    display: flex;
+    flex-direction: row; /* Side-by-side by default */
+    flex-wrap: wrap;     /* Allows jumping to the next line */
+    gap: 20px;           /* Adds space between image and text */
+    align-items: flex-start;
+  }
+
+  /* 2. Keep the image size constant */
+  .about-image {
+    flex: 0 0 375px;     /* Do not grow, do not shrink, stay at 400px */
+  }
+
+  .about-image img {
+    width: 100%;         /* Fill the 400px container */
+    height: auto;
+    border-radius: 2px;
+    display: block;
+  }
+
+  /* 3. Make the text wrap and fill remaining space */
+  .about-text {
+    flex: 1;             /* Take up all remaining horizontal space */
+    min-width: 160px;    /* Prevents text from getting too skinny */
+  }
+
+  /* 4. The Breakpoint: Stack vertically at 420px */
+  @media (max-width: 750px) {
+    .post-split {
+      flex-direction: column; /* Stack vertically */
+    }
+
+  .about-image {
+    flex: 0 0 auto;         /* Allow image to scale down if screen is < 400px */
+    width: 100%;
+  }
+
+  .about-image img {
+    width: 100%;            /* Image fills the screen width on mobile */
+  }
+}
+
+    .about-frog-image {
+      width: 50%;
+      border-radius: 2px;
+      display: block;
+      margin: 0 auto;
+      opacity: 95%;
+    }
+
+    .ig-link {
+      display: inline-block; /* Makes the box only as wide as the icon */
+      width: 24px;          /* Strict width for the link box */
+      height: 24px;         /* Strict height */
+      margin-top: 0px;
+      line-height: 0;       /* Removes extra "text baseline" space at bottom */
+      vertical-align: middle;
+    }
+
+    .ig-link svg {
+      width: 100%;          /* Fills exactly the 24px box of the parent */
+      height: 100%;
+      display: block;       /* Prevents SVG from acting like text and adding gaps */
+    }
+
 
     /* =====================
    Posts
@@ -89,18 +177,6 @@
     margin: 1em 0 1em 0;
     }
 
-    .featured-image {
-    width: 100%;
-    border-radius: 4px;
-    margin: 20px 0;
-    }
-
-    .bio-image {
-    width: 50%;
-    border-radius: 0;
-    margin: 20px 0;
-    }
-
     .audio-player {
     width: 100%;
     margin: 12px 0 24px;
@@ -122,27 +198,22 @@
       margin-top: 0;
     }
 
-    .about-image {
-      flex: 1;
+    .post-tags {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 12px;
+      font-size: 13px;
+      color: #777;
     }
 
-    .about-image img {
-      width: 100%;
-      border-radius: 2px;
-      display: block;
-      flex: 1;
+    .post-tags li {
+      display: inline;
+      margin-right: 10px;
     }
 
-    .about-frog-image {
-      width: 50%;
-      border-radius: 2px;
-      display: block;
-      margin: 0 auto;
-      opacity: 95%;
-    }
 
     /* Mobile fallback */
-    @media (max-width: 700px) {
+    @media (max-width: 420px) {
       .about-split {
         flex-direction: column;
       }
@@ -164,3 +235,11 @@
     }
 
     
+    /* =====================
+   Boxes
+===================== */
+
+/* Toggle this on/off by commenting it out */
+/* div, section, article, header, footer {
+  outline: 2px dotted red !important;
+} */

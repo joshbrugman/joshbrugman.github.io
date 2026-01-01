@@ -1,0 +1,31 @@
+  <!-- Post Number -->
+  <article>
+    <div class="post-date">Month 00 0000</div>
+    <h2 class="post-title">#X. Songname</h2>
+
+    <audio class="audio-player" controls preload="metadata" controlsList="nodownload">
+        <source src="song.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <p>
+      What are the main characters? How did they come to be?
+    </p>
+
+    <p>
+      Do you feel like you were able to speak? What did you say? 
+      What did you ovethink? How much did it qiuet you?
+    </p>
+
+    <p>
+      What was the best moment? What was the most difficult moment?
+      How do you feel about the song overall? What did you learn?
+    </p>
+
+    <ul class="post-tags">
+      <li>#inspired</li>
+      <li>#textural</li>
+      <li>#obscured</li>
+    </ul>
+
+  </article>
