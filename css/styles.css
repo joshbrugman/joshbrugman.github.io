@@ -5,7 +5,7 @@
 ===================== */
 
     body {
-    font-family: Arial, sans-serif;
+    font-family: 'Article', Helvetica, sans-serif;
     margin: 0;
     padding: 0;
     line-height: 1.6;
@@ -18,29 +18,35 @@
     padding: 20px;
     }
 
+    @font-face { /* Header */
+      font-family: 'Header';
+      src: url('/user-fonts/ZT\ Chintzy\ Black.woff2') format('woff2');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    @font-face { /* Post Title */
+      font-family: 'Title';
+      src: url('/user-fonts/ZTNature-Medium.woff2') format('woff2');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+
     @font-face { /* article */
       font-family: 'Article';
-      src: url('/user-fonts/ZTNature-Light.woff2') format('woff2'),
-      src: url('/user-fonts/ZTNature-Light.woff') format('woff');
+      src: url('/user-fonts/InterVariable.woff2') format('woff2');
       font-weight: normal;
       font-style: normal;
     }
 
     @font-face { /* article bold */
       font-family: 'Article';
-      src: url('/user-fonts/ZTNature-Medium.woff2') format('woff2'),
-      src: url('/user-fonts/ZTNature-SemiBold.woff2') format('woff');
+      src: url('/user-fonts/InterVariable.woff2') format('woff2');
       font-weight: bold;
       font-style: normal;
     }
 
-    @font-face { /* Header */
-      font-family: 'Header';
-      src: url('/user-fonts/ZT\ Chintzy\ Black.woff2') format('woff2'),
-      src: url('/user-fonts/ZT\ Chintzy\ Black.woff') format('woff');
-      font-weight: normal;
-      font-style: normal;
-    }
 
     .mobile-break, .small-break {
       display: none;
@@ -161,27 +167,13 @@
 }
 
     .about-frog-image {
+      margin: 1.5em auto;
       width: 50%;
       border-radius: 2px;
       display: block;
-      margin: 0 auto;
       opacity: 95%;
     }
 
-    .ig-link {
-      display: inline-block; /* Makes the box only as wide as the icon */
-      width: 24px;          /* Strict width for the link box */
-      height: 24px;         /* Strict height */
-      margin-top: 0px;
-      line-height: 0;       /* Removes extra "text baseline" space at bottom */
-      vertical-align: middle;
-    }
-
-    .ig-link svg {
-      width: 100%;          /* Fills exactly the 24px box of the parent */
-      height: 100%;
-      display: block;       /* Prevents SVG from acting like text and adding gaps */
-    }
 
 
     /* =====================
@@ -196,7 +188,17 @@
     color: #414040;
     }
 
+    a {
+      color: inherit;
+      text-decoration: underline;
+    }
+
+    a:hover {
+      color: #777
+    }
+ 
     .post-title {
+    font-family:  'Title', Helvetica, sans-serif;
     font-size: 32px;
     margin: 10px 0;
     font-weight: normal;
