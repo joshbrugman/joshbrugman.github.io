@@ -18,6 +18,46 @@
     padding: 20px;
     }
 
+    @font-face { /* article */
+      font-family: 'Article';
+      src: url('/user-fonts/ZTNature-Light.woff2') format('woff2'),
+      src: url('/user-fonts/ZTNature-Light.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    @font-face { /* article bold */
+      font-family: 'Article';
+      src: url('/user-fonts/ZTNature-Medium.woff2') format('woff2'),
+      src: url('/user-fonts/ZTNature-SemiBold.woff2') format('woff');
+      font-weight: bold;
+      font-style: normal;
+    }
+
+    @font-face { /* Header */
+      font-family: 'Header';
+      src: url('/user-fonts/ZT\ Chintzy\ Black.woff2') format('woff2'),
+      src: url('/user-fonts/ZT\ Chintzy\ Black.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    .mobile-break, .small-break {
+      display: none;
+    }
+
+    @media (max-width: 500px) {
+      .mobile-break {
+        display: inline;
+      }
+    }
+
+    @media (max-width: 450px) {
+      .small-break {
+        display: inline;
+      }
+    }
+
 
 
     /* =====================
@@ -26,6 +66,7 @@
 
 
     header {
+      font-family: 'Header', Arial, sans-serif;
       text-align: center;
       font-size: 34px;
       margin-bottom: 60px;
@@ -50,34 +91,26 @@
 ===================== */
     
 
-    .header-links a {
-      /* margin: 0 15px; */
-      margin-top: 0;
-      margin-bottom: -5px;
-      font-size: 18px;
-      color: #555;
-      text-decoration: none;
-    }
+.about-toggle {
+  font-family: 'Article', Arial, sans-serif;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #555;
+  text-decoration: none;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
 
-    .header-links a:hover {
-      color: #777;
-    }
-
-    .header-links a:first-child {
-      margin-right: 60px; /* Increases space between the two links */
-      margin-left: -18px;  /* Pulls 'About' specifically to the left */
-    }
-
-
-    .nav-link[aria-current="page"] {
-      color: #777;
-      pointer-events: none;
-      cursor: default;
-    }
-
-    a {
-      color: #555;
-    }
+.about-toggle:hover {
+  color: #777
+}
 
     
     /* =====================
@@ -157,6 +190,7 @@
 
 
     article {
+    font-family: 'Article', Arial, sans-serif;
     text-align: left;
     margin-bottom: 50px;
     color: #414040;
@@ -224,6 +258,7 @@
 ===================== */
 
     footer {
+      font-family: 'ZTTalk', Arial, sans-serif;
       border-top: 1px solid #ddd;
       padding-top: 15px;
       text-align: center;
