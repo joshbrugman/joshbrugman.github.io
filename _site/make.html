@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make</title>
+    <link rel="stylesheet" href="/css/styles.css">
+
+</head>
+<body>
+    <div class="container">
+        <button class="generate-button" id="makeBtn" onclick="generateIdea()">Make</button>
+        <div class="typing-area">
+            <!--
+                The cursor span lives INSIDE .typing-line so it is part of
+                the same pre-formatted text flow. It should always sit right
+                after the last typed character, on whatever line that is.
+            -->git 
+            <span class="typing-line" id="mainText"></span>
+        </div>
+    </div>
+
+    <script>
+        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQwzfh5qq3hsTxeFR1TBU3XyhFt3fcXeZAV09rd0Dek9KS5qo49pJYeG4ddpm4vjwWL2Y547of4RdlQ/pub?gid=0&single=true&output=csv';
+
+        let csvData = {};
+
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const columns = {};
+            headers.forEach(h => columns[h] = []);
+
+            lines.slice(1).forEach(line => {
+                const fields = [];
+                let current = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    if (line[i] === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (line[i] === ',' && !inQuotes) {
+                        fields.push(current.trim());
+                        current = '';
+                    } else {
+                        current += line[i];
+                    }
+                }
+                fields.push(current.trim());
+                headers.forEach((h, i) => {
+                    if (fields[i]) columns[h].push(fields[i]);
+                });
+            });
+            return columns;
+        }
+
+
+        async function loadData() {
+            try {
+                const res = await fetch(SHEET_CSV_URL);
+                const text = await res.text();
+                csvData = parseCSV(text);
+            } catch (e) {
+                console.warn('Failed to load sheet data:', e);
+            } finally {
+                document.getElementById('makeBtn').disabled = false;
+            }
+        }
+
+        // Disable button until data is loaded, then fetch
+        document.getElementById('makeBtn').disabled = true;
+        loadData();
+
+        let isTyping = false;
+        const MAX_WIDTH = 525;
+        const btn = document.getElementById('makeBtn');
+
+        function pick(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function getRandomRow() {
+            return {
+                color: pick(csvData.color),
+                genre: pick(csvData.genre),
+                object: pick(csvData.object),
+                motion: pick(csvData.motion),
+            };
+        }
+
+        function getArticle(word) {
+            const vowels = ['a', 'e', 'i', 'o', 'u'];
+            return vowels.includes(word.toLowerCase().charAt(0)) ? 'an' : 'a';
+        }
+
+        function getCharDelay(char) {
+            const baseDelay = 150;
+            const jitter = (Math.random() * 100) - 50;
+            const spacePause = (char === ' ') ? (Math.random() * 80) : 0;
+            const hesitation = (Math.random() < 0.10) ? (Math.random() * 160 + 60) : 0;
+            const stumble = (Math.random() < 0.03) ? (Math.random() * 250 + 250) : 0;
+            return Math.max(55, baseDelay + jitter + spacePause + hesitation + stumble);
+        }
+
+        function buildLines(text) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.font = '1.4rem Courier New, Courier, monospace';
+
+            const words = text.split(' ');
+            const lines = [];
+            let current = '';
+
+            for (const word of words) {
+                const candidate = current ? current + ' ' + word : word;
+                if (ctx.measureText(candidate).width > MAX_WIDTH && current !== '') {
+                    lines.push(current);
+                    current = word;
+                } else {
+                    current = candidate;
+                }
+            }
+            if (current) lines.push(current);
+            return lines.join('\n');
+        }
+
+        function typeText(elementId, text) {
+            return new Promise((resolve) => {
+                const el = document.getElementById(elementId);
+
+                // Build the text node and cursor span inside the pre element
+                // so the cursor is always part of the same text flow
+                el.innerHTML = '';
+                const textNode = document.createTextNode('');
+                const cursorSpan = document.createElement('span');
+                cursorSpan.className = 'cursor';
+                el.appendChild(textNode);
+                el.appendChild(cursorSpan);
+
+                let index = 0;
+
+                function typeNextChar() {
+                    if (index < text.length) {
+                        textNode.textContent += text.charAt(index);
+                        index++;
+                        setTimeout(typeNextChar, getCharDelay(text.charAt(index - 1)));
+                    } else {
+                        resolve();
+                    }
+                }
+
+                typeNextChar();
+            });
+        }
+
+        async function generateIdea() {
+            if (isTyping) return;
+            isTyping = true;
+
+            // Press the button down
+            btn.classList.add('pressed');
+
+            const row = getRandomRow();
+            const article = getArticle(row.color);
+            const raw = `${article} ${row.color} ${row.genre} ${row.object} that ${row.motion}.`;
+            const formatted = buildLines(raw);
+
+            await typeText('mainText', formatted);
+
+            // Release the button with a fade back
+            btn.classList.remove('pressed');
+            isTyping = false;
+        }
+    </script>
+</body>
+</html>
