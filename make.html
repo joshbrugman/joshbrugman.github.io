@@ -128,12 +128,11 @@
             return new Promise((resolve) => {
                 const el = document.getElementById(elementId);
 
-                // Build the text node and cursor span inside the pre element
-                // so the cursor is always part of the same text flow
+                const cursorSpan = el.querySelector('.cursor');
+
+                // Clear only text, keep cursor
                 el.innerHTML = '';
                 const textNode = document.createTextNode('');
-                const cursorSpan = document.createElement('span');
-                cursorSpan.className = 'cursor';
                 el.appendChild(textNode);
                 el.appendChild(cursorSpan);
 
