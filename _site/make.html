@@ -6,18 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Make</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        html, body { margin: 0; padding: 0; }
+        body { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; display: flex; justify-content: center; }
+    </style>
 
 </head>
 <body>
     <div class="container">
-        <button class="generate-button" id="makeBtn" onclick="generateIdea()">Make</button>
+        <button class="generate-button" id="makeBtn" onclick="generateIdea()">create</button>
         <div class="typing-area">
             <!--
                 The cursor span lives INSIDE .typing-line so it is part of
                 the same pre-formatted text flow. It should always sit right
                 after the last typed character, on whatever line that is.
-            -->git 
-            <span class="typing-line" id="mainText"></span>
+            -->
+            <span class="typing-line" id="mainText"><span class="cursor"></span></span>
         </div>
     </div>
 
@@ -72,7 +76,6 @@
         loadData();
 
         let isTyping = false;
-        const MAX_WIDTH = 525;
         const btn = document.getElementById('makeBtn');
 
         function pick(arr) {
@@ -103,17 +106,21 @@
         }
 
         function buildLines(text) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.font = '1.4rem Courier New, Courier, monospace';
-
+            const container = document.querySelector('.container');
+            const style = getComputedStyle(container);
+            const maxWidth = container.getBoundingClientRect().width
+                - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+            const ruler = document.createElement('span');
+            ruler.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font-family:"Courier New",Courier,monospace;font-size:1.4rem;';
+            container.appendChild(ruler);
             const words = text.split(' ');
             const lines = [];
             let current = '';
 
             for (const word of words) {
                 const candidate = current ? current + ' ' + word : word;
-                if (ctx.measureText(candidate).width > MAX_WIDTH && current !== '') {
+                ruler.textContent = candidate;
+                if (ruler.offsetWidth > maxWidth && current !== '') {
                     lines.push(current);
                     current = word;
                 } else {
@@ -121,6 +128,7 @@
                 }
             }
             if (current) lines.push(current);
+            container.removeChild(ruler);
             return lines.join('\n');
         }
 
