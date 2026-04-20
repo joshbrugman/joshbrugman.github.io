@@ -215,14 +215,40 @@
     p {
     margin: 1em 0 1em 0;
     }
-
+    
+    /* -- PLAYER SHELL -- */
     .audio-player {
+    display: flex;
     width: 100%;
-    margin: 12px 0 24px;
-    opacity: 0.75;
-    border-radius: 8px;
-    filter: invert(10%) sepia(20%) saturate(80%) brightness(95%);
+    box-sizing: border-box;
+    align-items: center;
+    gap: 12px;
+    background: #F5F4EF;
+    border: 1px solid var(--player-border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0);
+    user-select: none;
     }
+
+    /* -- PLAY / PAUSE BUTTON} -- */
+    .btn-play {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: color 0.15s;
+      padding: 0;
+    }
+    .btn-player:hover { color: var(--btn-hover); }
+    .btn-play svg { width: 22px; height: 22px; fill: currentColor; }
+
 
     .post-split {
     display: flex;
