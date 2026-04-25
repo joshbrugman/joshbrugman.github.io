@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Mura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #F9F9F7;
+  --card:        #FFFFFF;
+  --sidebar:     #1A1A1A;
+  --sidebar-active: #2C2C2C;
+  --ink:         #1C1C1A;
+  --ink-2:       #6B6B66;
+  --ink-3:       #A8A8A3;
+  --rule:        #E8E8E4;
+  --rule-2:      #D4D4CE;
+  --critical-dot:  #C0392B;
+  --critical-bg:   #F5E6E6;
+  --critical-text: #9B2C2C;
+  --active-dot:    #4A8C6F;
+  --active-bg:     #E6F0EB;
+  --active-text:   #2D6B50;
+  --peripheral-dot:  #5A7FA8;
+  --peripheral-bg:   #E6EEF5;
+  --peripheral-text: #2C5378;
+  --alert-bg:    #FDF3E3;
+  --alert-text:  #8A5C1A;
+}
+
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; background: var(--bg); }
+body { font-family: "Inter", system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+.shell { display: flex; flex-direction: column; height: 100vh; width: 100%; overflow: hidden; background: var(--bg); }
+
+.sidebar { width: 100%; height: 44px; min-height: 44px; background: var(--sidebar); display: flex; align-items: flex-end; flex-shrink: 0; }
+.sidebar-inner { width: 100%; max-width: 500px; margin-inline: auto; display: flex; flex-direction: row; align-items: flex-end; }
+.sidebar-top { display: contents; }
+.sidebar-bottom { display: contents; }
+
+.nav-btn { flex: 1; height: 44px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; background: none; color: #5A5A58; transition: background 0.05s, color 0.05s, opacity 0.1s ease; }
+.nav-btn.pressing { opacity: 0.45; transition: opacity 0.06s ease; }
+.nav-btn.active { background: var(--bg); color: var(--sidebar); }
+.nav-btn svg { width: 18px; height: 18px; }
+
+.sidebar-user { flex: 1; height: 44px; border-radius: 12px 12px 0 0; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; font-weight: 600; color: #5A5A58; transition: background 0.05s, color 0.05s, opacity 0.1s ease; }
+.sidebar-user.pressing { opacity: 0.45; transition: opacity 0.06s ease; }
+.sidebar-user.active { background: var(--bg); color: var(--sidebar); }
+
+.feed { flex: 1; min-width: 0; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
+.feed-header { width: 100%; max-width: 500px; margin-inline: auto; padding: 24px 20px 0; background: var(--bg); flex-shrink: 0; }
+.feed-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.feed-title { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -0.4px; }
+
+.add-btn { height: 34px; padding: 0 14px; background: var(--ink); color: #F9F9F7; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: opacity 0.12s; }
+.add-btn:hover { opacity: 0.82; }
+
+.feed-search-wrap { position: relative; margin-bottom: 12px; }
+.feed-search { width: 100%; height: 38px; border: 1px solid var(--rule-2); border-radius: 9px; background: var(--card); padding: 0 12px 0 34px; font-size: 13px; font-family: inherit; color: var(--ink); outline: none; transition: border-color 0.12s; }
+.feed-search:focus { border-color: var(--rule-2); box-shadow: 0 0 0 3px rgba(0,0,0,0.04); }
+.feed-search::placeholder { color: var(--ink-3); }
+.feed-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--ink-3); pointer-events: none; }
+
+.filter-wrap { position: relative; border-bottom: 1px solid var(--rule); margin-bottom: 0; }
+.filter-wrap::before { content: ''; position: absolute; left: 0; top: 0; bottom: 14px; width: 40px; background: linear-gradient(to left, transparent, var(--bg)); pointer-events: none; transition: opacity 0.15s; opacity: 0; z-index: 1; }
+.filter-wrap.at-start::before { opacity: 0; }
+.filter-wrap:not(.at-start)::before { opacity: 1; }
+.filter-wrap::after { content: ''; position: absolute; right: 0; top: 0; bottom: 14px; width: 40px; background: linear-gradient(to right, transparent, var(--bg)); pointer-events: none; transition: opacity 0.15s; }
+.filter-wrap.at-end::after { opacity: 0; }
+.filter-row { display: flex; gap: 6px; padding-bottom: 14px; overflow-x: auto; scrollbar-width: none; }
+.filter-row::-webkit-scrollbar { display: none; }
+
+.chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 6px; padding: 5px 12px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--rule-2); background: var(--card); color: var(--ink-2); font-family: inherit; transition: all 0.12s; user-select: none; white-space: nowrap; }
+.chip:hover { border-color: var(--rule-2); background: var(--rule); }
+.chip.active-critical { background: var(--critical-bg); border-color: var(--critical-dot); color: var(--critical-text); }
+.chip.active-active { background: var(--active-bg); border-color: var(--active-dot); color: var(--active-text); }
+.chip.active-peripheral { background: var(--peripheral-bg); border-color: var(--peripheral-dot); color: var(--peripheral-text); }
+.chip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+.focus-tag-wrap { border-bottom: 1px solid var(--rule); }
+.focus-tag-wrap:empty, .focus-tag-wrap.hidden { display: none; }
+.focus-tag-row { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 16px 10px; }
+.focus-tag { display: inline-flex; align-items: center; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--rule-2); background: var(--card); color: var(--ink-2); font-family: inherit; transition: all 0.12s; user-select: none; white-space: nowrap; }
+.focus-tag:hover { background: var(--rule); }
+.focus-tag.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.feed-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+.feed-body-inner { max-width: 500px; margin-inline: auto; padding: 14px 20px 80px; }
+
+.alert { display: flex; align-items: center; gap: 8px; background: var(--alert-bg); border-radius: 9px; padding: 10px 14px; margin-bottom: 12px; }
+.alert-icon { font-size: 14px; flex-shrink: 0; }
+.alert-text { font-size: 12px; font-weight: 500; color: var(--alert-text); }
+.feed-section-label { font-size: 11px; font-weight: 500; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px; }
+
+.card { background: var(--card); border: 1px solid var(--rule); border-radius: 12px; padding: 13px 14px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.12s, box-shadow 0.12s; }
+.card:hover { border-color: var(--rule-2); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.card.selected { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.card.overdue { border-left-width: 3px; border-left-color: #E53E3E !important; padding-left: 12px; }
+.card-pill-wrap { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+@keyframes ringPulse { 0%, 100% { stroke-opacity: 1; } 50% { stroke-opacity: 0.35; } }
+.detail-ping-ring-wrap { position: relative; display: flex; align-items: center; justify-content: center; margin: 6px auto 4px; }
+.detail-ping-ring-label { position: absolute; font-size: 14px; font-weight: 400; color: var(--ink-2); white-space: nowrap; pointer-events: none; text-align: center; }
+
+.card-row { display: flex; align-items: center; gap: 10px; }
+.card-info { flex: 1; min-width: 0; }
+.card-name { font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-org { font-size: 12px; color: #8f8f8a; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
+.card-sub-divider { opacity: 0.65; font-size: 11px; }
+
+.status-pill { flex-shrink: 0; border-radius: 6px; padding: 3px 9px; font-size: 11px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; }
+.pill-critical { background: var(--critical-bg); color: var(--critical-text); }
+.pill-active { background: var(--active-bg); color: var(--active-text); }
+.pill-peripheral { background: var(--peripheral-bg); color: var(--peripheral-text); }
+
+.card-context { display: flex; justify-content: space-between; align-items: baseline; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--rule); gap: 8px; }
+.card-last-ping { font-size: 11px; color: var(--ink-3); flex-shrink: 0; }
+.card-next-step { font-size: 12px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.card-next-step strong { color: var(--ink); font-weight: 600; }
+
+.card-actions { display: flex; gap: 5px; margin-top: 9px; }
+.card-action-btn { flex: 1; height: 32px; background: var(--bg); border: 1px solid var(--rule); border-radius: 7px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-2); font-size: 15px; transition: background 0.1s, border-color 0.1s, color 0.1s; }
+.card-action-btn:hover { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+.detail-ping-row { display: flex; gap: 5px; margin-bottom: 16px; }
+.detail-ping-btn { flex: 1; height: 32px; background: var(--bg); border: 1px solid var(--rule); border-radius: 7px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-2); font-size: 15px; font-family: inherit; transition: background 0.1s, border-color 0.1s, color 0.1s; }
+.detail-ping-btn:hover { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+.detail-fields { border-top: 1px solid var(--rule); margin-top: 4px; }
+.detail-field { padding: 11px 0; border-bottom: 1px solid var(--rule); cursor: pointer; }
+.detail-field-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink-3); margin-bottom: 4px; }
+.detail-field-value { font-size: 14px; color: var(--ink); line-height: 1.5; }
+.detail-field-value.placeholder { color: var(--ink-3); font-style: italic; }
+.detail-field-display-only .detail-field-value { color: var(--ink-2); }
+.detail-field input, .detail-field textarea { width: 100%; background: #F2F2EF; border: none; outline: none; font-family: inherit; font-size: 14px; color: var(--ink); padding: 2px 4px 4px; line-height: 1.5; border-radius: 4px; animation: none; transition: none; display: block; }
+.detail-field textarea { resize: none; min-height: 56px; }
+.detail-field select { width: 100%; background: none; border: none; border-bottom: none; outline: none; font-family: inherit; font-size: 14px; color: var(--ink); padding: 2px 0 4px; cursor: pointer; -webkit-appearance: auto; appearance: auto; }
+
+.detail-field-display-only { cursor: default; }
+.detail-field-mutuals { cursor: default; }
+.mutual-chip-link { cursor: pointer; }
+.mutual-chip-link:hover { border-color: var(--ink); color: var(--ink); }
+.mutuals-display-wrap { position: relative; cursor: pointer; }
+.mutuals-display-wrap--has-chips::before, .mutuals-display-wrap--has-chips::after { content: ''; position: absolute; top: 0; bottom: 0; width: 32px; pointer-events: none; z-index: 1; transition: opacity 0.15s; }
+.mutuals-display-wrap--has-chips::before { left: 0; background: linear-gradient(to left, transparent, var(--card)); opacity: 0; }
+.mutuals-display-wrap--has-chips::after { right: 0; background: linear-gradient(to right, transparent, var(--card)); }
+.mutuals-display-wrap--has-chips.at-start::before { opacity: 0; }
+.mutuals-display-wrap--has-chips:not(.at-start)::before { opacity: 1; }
+.mutuals-display-wrap--has-chips.at-end::after { opacity: 0; }
+.mutuals-scroll-row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.mutuals-scroll-row::-webkit-scrollbar { display: none; }
+.mutual-chip-tag { cursor: pointer; font-size: 12px; font-weight: 500; color: var(--ink-2); background: var(--card); border: 1px solid var(--rule-2); border-radius: 6px; padding: 3px 10px; white-space: nowrap; user-select: none; }
+.mutuals-editor { margin-top: 4px; }
+.mutuals-search { width: 100%; background: var(--bg); border: 1px solid var(--rule-2); border-radius: 8px; outline: none; font-family: inherit; font-size: 13px; color: var(--ink); padding: 7px 10px; margin-bottom: 4px; box-sizing: border-box; }
+.mutuals-search::placeholder { color: var(--ink-3); }
+.mutuals-list { max-height: calc(5 * 41px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.mutuals-list::-webkit-scrollbar { display: none; }
+.mutual-option { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--rule); cursor: pointer; user-select: none; }
+.mutual-option:last-of-type { border-bottom: none; }
+.mutual-tick { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--rule-2); display: flex; align-items: center; justify-content: center; font-size: 9px; color: transparent; flex-shrink: 0; transition: background 0.12s, border-color 0.12s, color 0.12s; }
+.mutual-tick.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+.mutual-option-name { font-size: 14px; color: var(--ink); }
+.mutuals-done-btn { margin-top: 10px; width: 100%; padding: 8px; background: none; border: 1px solid var(--rule-2); border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer; letter-spacing: 0.2px; }
+.mutuals-done-btn:hover { background: var(--bg); }
+
+.confirm-modal { background: var(--card); border-radius: 16px; padding: 28px 24px 20px; width: 100%; max-width: 320px; box-shadow: 0 12px 48px rgba(0,0,0,0.18); animation: slideUp 0.1s ease-out; border: 1px solid var(--rule); text-align: center; }
+.confirm-title { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 20px; }
+.confirm-actions { display: flex; flex-direction: column; gap: 8px; }
+.confirm-btn-destroy { width: 100%; padding: 12px; background: #C0392B; color: #fff; border: none; border-radius: 9px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: opacity 0.12s; }
+.confirm-btn-destroy:hover { opacity: 0.88; }
+.confirm-btn-cancel { width: 100%; padding: 11px; background: none; color: var(--ink-2); border: 1px solid var(--rule-2); border-radius: 9px; font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background 0.12s; }
+.confirm-btn-cancel:hover { background: var(--bg); }
+
+.detail-section-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink-3); padding: 24px 0 12px; }
+
+.modal-backdrop { position: fixed; inset: 0; background: rgba(28,28,26,0.38); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; animation: fadeIn 0.12s; overscroll-behavior: none; }
+.modal-backdrop-top { z-index: 400; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes slideUp { from { transform: translateY(3px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes slideDown { from { transform: translateY(0); opacity: 1; } to { transform: translateY(3px); opacity: 0; } }
+
+.modal { background: var(--card); border-radius: 14px; padding: 26px; width: 100%; max-width: 420px; box-shadow: 0 8px 48px rgba(0,0,0,0.14); animation: slideUp 0.1s ease-out; transition: background 0.2s; max-height: 88vh; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--rule); }
+.modal-wide { max-width: 500px; }
+.modal--edit-mode { background: #E8E8E2; }
+
+.modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+.modal-title { font-size: 16px; font-weight: 700; color: var(--ink); }
+.modal-subtitle { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+.detail-modal-header { position: relative; display: flex; align-items: center; justify-content: center; min-height: 44px; margin-bottom: 20px; }
+.detail-header-center { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.detail-header-name { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; color: var(--ink); }
+.detail-header-focus { font-size: 14px; color: var(--ink-2); }
+.detail-corner-btn { position: absolute; top: 0; background: none; border: none; font-size: 18px; color: var(--ink-3); cursor: pointer; padding: 2px; line-height: 1; transition: color 0.1s; }
+.detail-corner-btn:hover { color: var(--ink); }
+.detail-corner-btn--active { color: var(--ink) !important; }
+.detail-gear-btn { left: 0; }
+.detail-close-btn { right: 0; }
+
+.detail-edit-pane { display: none; border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 0; }
+.detail-edit-pane--open { display: block; }
+.detail-view-pane--hidden { display: none; }
+.detail-ping-row.detail-view-pane--hidden { display: none; margin-bottom: 0; }
+.close-btn { background: none; border: none; font-size: 18px; color: var(--ink-3); cursor: pointer; padding: 2px; line-height: 1; flex-shrink: 0; transition: color 0.1s; }
+.close-btn:hover { color: var(--ink); }
+
+.form-group { margin-bottom: 13px; }
+.form-label { display: block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-3); margin-bottom: 5px; }
+.form-input { width: 100%; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--rule-2); font-size: 14px; color: var(--ink); font-family: inherit; outline: none; background: var(--bg); transition: border-color 0.12s, box-shadow 0.12s; }
+.form-input:focus { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
+textarea.form-input { resize: none; line-height: 1.5; }
+select.form-input { background: var(--bg); cursor: pointer; }
+
+.btn-primary { width: 100%; padding: 11px; background: var(--ink); color: #F9F9F7; border: none; border-radius: 9px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: opacity 0.12s; margin-top: 4px; }
+.btn-primary:hover { opacity: 0.84; }
+.btn-secondary { width: 100%; padding: 10px; background: none; color: var(--ink-2); border: 1px solid var(--rule-2); border-radius: 9px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background 0.12s; margin-top: 8px; }
+.btn-secondary:hover { background: var(--bg); }
+.btn-danger { width: 100%; padding: 9px; background: none; color: var(--critical-text); border: 1px solid var(--critical-bg); border-radius: 9px; font-size: 12px; font-weight: 500; font-family: inherit; cursor: pointer; margin-top: 8px; transition: background 0.12s; }
+.btn-danger:hover { background: var(--critical-bg); }
+.btn-logout { width: 100%; padding: 11px; background: none; color: var(--ink-3); border: 1px solid var(--rule-2); border-radius: 9px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; letter-spacing: 0.2px; transition: color 0.15s, border-color 0.15s; }
+.btn-logout:hover { color: var(--ink); border-color: var(--ink-3); }
+
+.history-item { display: flex; align-items: flex-start; gap: 11px; padding: 11px 0; border-bottom: 1px solid var(--rule); }
+.history-item:last-child { border-bottom: none; }
+.history-icon { width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--ink-3); margin-top: 1px; }
+.history-body { flex: 1; }
+.history-verb { font-size: 13px; font-weight: 600; color: var(--ink); }
+.history-note { font-size: 12px; color: var(--ink-2); margin-top: 2px; line-height: 1.4; font-style: italic; }
+.history-date { font-size: 11px; color: var(--ink-3); margin-top: 3px; }
+
+.ping-modal-channel { font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 14px; }
+.empty-state { text-align: center; color: var(--ink-3); padding: 40px 0; font-size: 14px; }
+
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+.settings-view { flex: 1; overflow-y: auto; overscroll-behavior: contain; background: var(--bg); display: flex; flex-direction: column; }
+.settings-inner { width: 100%; max-width: 500px; margin-inline: auto; padding: 24px 20px 80px; }
+.settings-page-title { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -0.4px; margin-bottom: 4px; }
+.settings-page-sub { font-size: 13px; color: var(--ink-3); margin-bottom: 40px; }
+.settings-section { margin-bottom: 40px; }
+.settings-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.settings-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink-3); }
+.settings-section-desc { font-size: 13px; color: var(--ink-2); margin-top: 3px; }
+.btn-add-cadence { display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 12px; background: var(--ink); color: #F9F9F7; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; transition: opacity 0.12s; white-space: nowrap; }
+.btn-add-cadence:hover { opacity: 0.8; }
+
+.channel-icon-swatch { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--ink-2); flex-shrink: 0; }
+.channel-icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.channel-icon-option { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: var(--bg); border: 1.5px solid var(--rule); border-radius: 8px; cursor: pointer; color: var(--ink-2); transition: border-color 0.12s, background 0.12s, color 0.12s; }
+.channel-icon-option:hover { border-color: var(--ink-3); color: var(--ink); }
+.channel-icon-option.selected { border-color: var(--ink); background: var(--ink); color: #fff; }
+
+.cadence-list { display: flex; flex-direction: column; gap: 8px; }
+.cadence-row { background: var(--card); border: 1px solid var(--rule); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; transition: border-color 0.12s, box-shadow 0.12s; cursor: pointer; }
+.cadence-row:hover { border-color: var(--rule-2); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.cadence-color-swatch { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.cadence-info { flex: 1; min-width: 0; }
+.cadence-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+.cadence-meta { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.cadence-pill { border-radius: 6px; padding: 3px 9px; font-size: 11px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; }
+.cadence-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.cadence-row-btn { width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink-3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: background 0.1s, color 0.1s; }
+.cadence-row-btn:hover { background: var(--rule); color: var(--ink); }
+.cadence-row-btn.danger:hover { background: #F5E6E6; color: #9B2C2C; border-color: #F5E6E6; }
+
+.cadence-color-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.cadence-color-option { width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid transparent; cursor: pointer; transition: border-color 0.1s, transform 0.1s; flex-shrink: 0; }
+.cadence-color-option:hover { transform: scale(1.12); }
+.cadence-color-option.selected { border-color: var(--ink); }
+
+.timeframe-wrap { margin-top: 4px; }
+.timeframe-slider { width: 100%; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 99px; background: var(--rule-2); outline: none; cursor: pointer; margin-bottom: 8px; }
+.timeframe-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); cursor: pointer; border: 2.5px solid var(--card); box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+.timeframe-slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--ink); cursor: pointer; border: 2.5px solid var(--card); box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+.timeframe-display { font-size: 13px; font-weight: 600; color: var(--ink); }
+.timeframe-range-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--ink-3); margin-top: 4px; }
+.settings-divider { border: none; border-top: 1px solid var(--rule); margin: 32px 0; }
+</style>
+</head>
+<body>
+
+<div class="shell" id="shell">
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+      <button class="nav-btn active" id="nav-contacts" title="Contacts" onmousedown="navPress(this,'contacts')" ontouchstart="navPress(this,'contacts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/>
+        </svg>
+      </button>
+      <button class="nav-btn" id="nav-settings" title="Cadences" onmousedown="navPress(this,'settings','cadences')" ontouchstart="navPress(this,'settings','cadences')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+      <button class="nav-btn" id="nav-channels" title="Channels" onmousedown="navPress(this,'settings','channels')" ontouchstart="navPress(this,'settings','channels')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          <line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="13" y2="14"/>
+        </svg>
+      </button>
+      <div class="sidebar-user" title="Orbit" onmousedown="navPress(this,'orbit')" ontouchstart="navPress(this,'orbit')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><ellipse cx="12" cy="12" rx="11" ry="4.5" transform="rotate(-20 12 12)"/></svg></div>
+    </div>
+  </aside>
+
+  <div class="feed">
+    <div class="feed-header">
+      <div class="feed-title-row">
+        <div class="feed-title">Contacts</div>
+        <button class="add-btn" onclick="openAdd()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          New
+        </button>
+      </div>
+      <div class="feed-search-wrap">
+        <svg class="feed-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input class="feed-search" type="text" id="search-input" placeholder="Search by name, role, or notes…" oninput="onSearch(this.value)" />
+      </div>
+      <div class="filter-wrap"><div class="filter-row" id="filter-row"></div></div>
+      <div class="focus-tag-wrap hidden" id="focus-tag-wrap"><div class="focus-tag-row" id="focus-tag-row"></div></div>
+    </div>
+    <div class="feed-body">
+      <div class="feed-body-inner">
+        <div id="alert-area"></div>
+        <div id="card-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-view" id="settings-pane" style="display:none">
+    <div class="settings-inner" id="settings-inner"></div>
+  </div>
+
+  <div class="settings-view" id="orbit-pane" style="display:none">
+    <div class="settings-inner" id="orbit-inner"></div>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+<div id="modal-root-2"></div>
+
+<script>
+'use strict';
+
+let STATUS = {};
+
+const CADENCE_COLORS = [
+  { dot: '#B8602A', bg: '#F5EBE0', text: '#8C4418' },
+  { dot: '#4A8C6F', bg: '#E6F0EB', text: '#2D6B50' },
+  { dot: '#5A7FA8', bg: '#E6EEF5', text: '#2C5378' },
+  { dot: '#8C6F4A', bg: '#F0EAE0', text: '#6B4E2D' },
+  { dot: '#7A5A8C', bg: '#EDE6F5', text: '#4E2D6B' },
+  { dot: '#8C8C4A', bg: '#F0F0E0', text: '#5C5C2A' },
+  { dot: '#4A7A8C', bg: '#E0EEF0', text: '#2A5260' },
+  { dot: '#A87A4A', bg: '#F5EDE0', text: '#7A5020' },
+  { dot: '#6B6B66', bg: '#EBEBEA', text: '#3A3A38' },
+  { dot: '#8C4A5A', bg: '#F5E6EA', text: '#6B2A38' },
+];
+
+const CADENCE_KEY = 'mura_cohorts_v1';
+
+const DEFAULT_CADENCES = [
+  { id: 'critical',   label: 'Critical',   days: 14,  colorIdx: 0 },
+  { id: 'active',     label: 'Active',     days: 30,  colorIdx: 1 },
+  { id: 'peripheral', label: 'Peripheral', days: 60,  colorIdx: 2 },
+  { id: 'longterm',   label: 'Outreach',   days: 90,  colorIdx: 4 },
+];
+
+function loadCadences() {
+  try { const r = localStorage.getItem(CADENCE_KEY); if (r) return JSON.parse(r); } catch (_) {}
+  return DEFAULT_CADENCES.map(c => ({ ...c }));
+}
+function saveCadences(cadences) { try { localStorage.setItem(CADENCE_KEY, JSON.stringify(cadences)); } catch (_) {} }
+
+function cadenceToStatus(cadence) {
+  const col = CADENCE_COLORS[cadence.colorIdx] || CADENCE_COLORS[0];
+  return {
+    label:     cadence.label,
+    pingDays:  cadence.days,
+    pingLabel: fmtDays(cadence.days),
+    dot:       col.dot,
+    bg:        col.bg,
+    text:      col.text,
+    chipClass: `active-cadence-${cadence.id}`,
+  };
+}
+
+function rebuildStatus(cadences) {
+  STATUS = {};
+  cadences.forEach(c => { STATUS[c.id] = cadenceToStatus(c); });
+  let styleEl = document.getElementById('dynamic-chip-styles');
+  if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'dynamic-chip-styles'; document.head.appendChild(styleEl); }
+  styleEl.textContent = cadences.map(c => {
+    const col = CADENCE_COLORS[c.colorIdx] || CADENCE_COLORS[0];
+    return `.active-cadence-${c.id} { background: ${col.bg}; border-color: ${col.dot}; color: ${col.text}; }`;
+  }).join('\n');
+}
+
+const PING_STEPS = [
+  { days: 1, label: '1 day' }, { days: 2, label: '2 day' }, { days: 3, label: '3 day' },
+  { days: 4, label: '4 day' }, { days: 5, label: '5 day' }, { days: 6, label: '6 day' },
+  { days: 7, label: '1 week' }, { days: 14, label: '2 week' }, { days: 21, label: '3 week' },
+  { days: 30, label: '1 month' }, { days: 60, label: '2 month' }, { days: 90, label: '3 month' },
+  { days: 120, label: '4 month' }, { days: 150, label: '5 month' }, { days: 180, label: '6 month' },
+];
+
+function fmtDays(d) {
+  if (d === 1) return 'Daily'; if (d === 7) return 'Weekly'; if (d === 14) return 'Every 2 weeks';
+  if (d === 21) return 'Every 3 weeks'; if (d === 30) return 'Monthly'; if (d === 60) return 'Every 2 months';
+  if (d === 90) return 'Quarterly'; if (d === 150) return 'Every 5 months'; if (d === 180) return 'Every 6 months';
+  if (d === 365) return 'Yearly'; if (d < 7) return `Every ${d} days`;
+  if (d % 7 === 0) { const w = d/7; return `Every ${w} weeks`; }
+  if (d % 30 === 0) { const m = d/30; return `Every ${m} months`; }
+  return `Every ${d} days`;
+}
+
+function daysToStepIdx(d) {
+  let closest = 0, diff = Infinity;
+  PING_STEPS.forEach((s,i) => { const delta = Math.abs(s.days-d); if (delta<diff){diff=delta;closest=i;} });
+  return closest;
+}
+
+const CHANNEL_ICONS = [
+  { key: 'bubble',    svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>' },
+  { key: 'envelope',  svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>' },
+  { key: 'phone',     svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 012 2.18 2 2 0 013.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0121.92 14z"/></svg>' },
+  { key: 'video',     svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3V10z"/></svg>' },
+  { key: 'mic',       svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0014 0"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>' },
+  { key: 'instagram', svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/></svg>' },
+  { key: 'twitter',   svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l16 16M4 20L20 4"/></svg>' },
+  { key: 'linkedin',  svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><line x1="8" y1="10" x2="8" y2="17"/><line x1="8" y1="7" x2="8" y2="7.5" stroke-width="2.5" stroke-linecap="round"/><path d="M12 10v7M12 13a3 3 0 016 0v4"/></svg>' },
+  { key: 'tiktok',    svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg>' },
+  { key: 'whatsapp',  svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>' },
+  { key: 'snapchat',  svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8 2 6 5 6 8v2c0 .6-.4 1.2-1 1.5-.5.2-.5.8 0 1 .8.3 1.5.9 1.8 1.7.2.5.7.6 1.2.4.4-.2.9-.3 1.5-.1.6.2 1 .7 1.5.7s.9-.5 1.5-.7c.6-.2 1.1-.1 1.5.1.5.2 1 .1 1.2-.4.3-.8 1-1.4 1.8-1.7.5-.2.5-.8 0-1C17.4 11.2 17 10.6 17 10V8c0-3-2-6-5-6z"/></svg>' },
+  { key: 'facebook',  svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>' },
+  { key: 'star',      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' },
+  { key: 'heart',     svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>' },
+  { key: 'flag',      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>' },
+  { key: 'bell',      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>' },
+  { key: 'bookmark',  svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>' },
+  { key: 'zap',       svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' },
+];
+
+function iconSvg(key) { const found = CHANNEL_ICONS.find(i => i.key === key); return found ? found.svg : CHANNEL_ICONS[0].svg; }
+
+const CHANNEL_KEY = 'mura_methods_v1';
+const DEFAULT_CHANNELS = [
+  { id: 'text',  label: 'Text',      verb: 'Texted',     iconKey: 'bubble'   },
+  { id: 'email', label: 'Email',     verb: 'Emailed',    iconKey: 'envelope' },
+  { id: 'call',  label: 'Call',      verb: 'Called',     iconKey: 'phone'    },
+  { id: 'ig',    label: 'Instagram', verb: "DM'd on IG", iconKey: 'instagram'},
+];
+
+function loadChannels() { try { const r = localStorage.getItem(CHANNEL_KEY); if (r) return JSON.parse(r); } catch (_) {} return DEFAULT_CHANNELS.map(m => ({ ...m })); }
+function saveChannels(channels) { try { localStorage.setItem(CHANNEL_KEY, JSON.stringify(channels)); } catch (_) {} }
+function channelsToConst(channels) { return channels.map(m => ({ key: m.id, label: m.label, verb: m.verb, icon: iconSvg(m.iconKey) })); }
+
+let PING_CHANNELS = [];
+
+// ── Today's date helpers ──
+function ago(days) { return new Date(Date.now() - days * 86400000).toISOString(); }
+function todayBirthday() {
+  const t = new Date();
+  const m = String(t.getMonth()+1).padStart(2,'0');
+  const d = String(t.getDate()).padStart(2,'0');
+  return `${m}/${d}/1990`;
+}
+function birthdayThisYear(month, day, year) {
+  return `${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}/${year}`;
+}
+
+// ── 115 contacts: music industry + entrepreneurial ──
+function buildSeed() {
+  const today = new Date();
+  const tm = today.getMonth()+1, td = today.getDate();
+
+  const raw = [
+    // CRITICAL (14-day cadence) — 28 contacts
+    { name: 'Marcus Delray',      role: 'Record Producer',         company: 'Delray Sound Studios',      status: 'critical',   lastDaysAgo: 0,  notes: 'Producing our next EP. Key creative partner.', nextStep: 'Review final mix stems', birthday: null },
+    { name: 'Sasha Venn',         role: 'Booking Agent',           company: 'Apex Live Agency',           status: 'critical',   lastDaysAgo: 0,  notes: 'Handles all major festival bookings.', nextStep: 'Confirm summer tour dates', birthday: birthdayThisYear(tm, td, 1988) },
+    { name: 'Jonah Reeves',       role: 'Music Supervisor',        company: 'Reeves Sync Licensing',      status: 'critical',   lastDaysAgo: 2,  notes: 'Placed two tracks in Netflix series.', nextStep: 'Send updated catalog', birthday: null },
+    { name: 'Priya Mehta',        role: 'A&R Director',            company: 'Interscope Records',         status: 'critical',   lastDaysAgo: 3,  notes: 'Actively evaluating our project for signing.', nextStep: 'Send revised demo package', birthday: null },
+    { name: 'Cole Ashford',       role: 'Venture Partner',         company: 'Soundwave Ventures',         status: 'critical',   lastDaysAgo: 5,  notes: 'Leading our seed round. Very engaged.', nextStep: 'Send updated cap table', birthday: null },
+    { name: 'Nadia Osei',         role: 'Music Attorney',          company: 'Osei & Partners LLP',        status: 'critical',   lastDaysAgo: 6,  notes: 'Negotiating our distribution deal.', nextStep: 'Review contract redlines', birthday: null },
+    { name: 'Trent Holloway',     role: 'Tour Manager',            company: 'Holloway Road Mgmt',         status: 'critical',   lastDaysAgo: 7,  notes: 'Managing the fall arena run.', nextStep: 'Finalize routing spreadsheet', birthday: null },
+    { name: 'Yuki Tanaka',        role: 'Mixing Engineer',         company: 'Tanaka Audio Works',         status: 'critical',   lastDaysAgo: 8,  notes: 'Mixing the album. Incredible ear for detail.', nextStep: 'Approve reference tracks', birthday: null },
+    { name: 'Bria Fontaine',      role: 'Brand Partnerships Lead', company: 'Fontaine Creative',          status: 'critical',   lastDaysAgo: 9,  notes: 'Brokering deal with major apparel brand.', nextStep: 'Review partnership deck', birthday: null },
+    { name: 'Eli Strauss',        role: 'Angel Investor',          company: 'Strauss Capital',            status: 'critical',   lastDaysAgo: 10, notes: 'Committed $250k. Wants monthly updates.', nextStep: 'Send investor update memo', birthday: null },
+    { name: 'Camille Durand',     role: 'PR Director',             company: 'Durand Media Group',         status: 'critical',   lastDaysAgo: 11, notes: 'Pitching our album to major press outlets.', nextStep: 'Approve press release draft', birthday: null },
+    { name: 'Darius King',        role: 'Mastering Engineer',      company: 'Sterling Sound',             status: 'critical',   lastDaysAgo: 12, notes: 'Mastering the full LP. Grammy-winning credits.', nextStep: 'Deliver final WAV files', birthday: null },
+    { name: 'Leila Nazari',       role: 'Music Publisher',         company: 'Nazari Music Group',         status: 'critical',   lastDaysAgo: 13, notes: 'Interested in co-publishing deal.', nextStep: 'Schedule publishing meeting', birthday: null },
+    { name: 'Finn Calloway',      role: 'Startup Founder',         company: 'Beatstream Inc.',            status: 'critical',   lastDaysAgo: 14, notes: 'Building a streaming analytics platform. Potential integration.', nextStep: 'Demo their beta product', birthday: null },
+    { name: 'Amara Diallo',       role: 'Creative Director',       company: 'Diallo Visual Studio',       status: 'critical',   lastDaysAgo: 0,  notes: 'Directing our music video campaign.', nextStep: 'Approve storyboard revisions', birthday: birthdayThisYear(tm, td, 1992) },
+    { name: 'Remy Voss',          role: 'Label Manager',           company: 'Voss Records',               status: 'critical',   lastDaysAgo: 1,  notes: 'Overseeing our label deal execution.', nextStep: 'Sign distribution addendum', birthday: null },
+    { name: 'Ines Carvalho',      role: 'Sync Agent',              company: 'Carvalho Sync',              status: 'critical',   lastDaysAgo: 4,  notes: 'Pitching catalog to TV networks.', nextStep: 'Send updated stems folder', birthday: null },
+    { name: 'Tobias Wren',        role: 'Music Tech Founder',      company: 'Wren Labs',                  status: 'critical',   lastDaysAgo: 6,  notes: 'Building AI composition tools. Exploring collab.', nextStep: 'Review API integration proposal', birthday: null },
+    { name: 'Simone Archer',      role: 'Talent Manager',          company: 'Archer Talent Group',        status: 'critical',   lastDaysAgo: 8,  notes: 'Managing our co-headliner. Key relationship.', nextStep: 'Align on joint press strategy', birthday: null },
+    { name: 'Kwame Asante',       role: 'Festival Director',       company: 'Afrobeats Global Fest',      status: 'critical',   lastDaysAgo: 10, notes: 'Offered headline slot for August.', nextStep: 'Confirm performance fee', birthday: null },
+    { name: 'Vera Lindqvist',     role: 'Music Journalist',        company: 'Pitchfork',                  status: 'critical',   lastDaysAgo: 11, notes: 'Writing a feature profile. Very positive.', nextStep: 'Schedule photo shoot', birthday: null },
+    { name: 'Dante Morales',      role: 'Session Guitarist',       company: 'Freelance',                  status: 'critical',   lastDaysAgo: 12, notes: 'Tracking guitars on the album this week.', nextStep: 'Book studio time', birthday: null },
+    { name: 'Hana Yoshida',       role: 'Startup COO',             company: 'Lyric AI',                   status: 'critical',   lastDaysAgo: 13, notes: 'Exploring lyric generation partnership.', nextStep: 'Review NDA terms', birthday: null },
+    { name: 'Olu Adeyemi',        role: 'Radio Promoter',          company: 'Adeyemi Promo Group',        status: 'critical',   lastDaysAgo: 0,  notes: 'Pushing single to urban radio. Strong relationships.', nextStep: 'Confirm add dates', birthday: null },
+    { name: 'Petra Novak',        role: 'Merchandise Director',    company: 'Novak Merch Co.',            status: 'critical',   lastDaysAgo: 2,  notes: 'Designing tour merch line.', nextStep: 'Approve sample designs', birthday: null },
+    { name: 'Caleb Frost',        role: 'Music Educator',          company: 'Frost Academy of Music',     status: 'critical',   lastDaysAgo: 5,  notes: 'Partnering on youth music program.', nextStep: 'Finalize curriculum outline', birthday: null },
+    { name: 'Mia Okonkwo',        role: 'Podcast Host',            company: 'The Sound Business Pod',     status: 'critical',   lastDaysAgo: 7,  notes: 'Invited us for a feature episode.', nextStep: 'Confirm recording date', birthday: null },
+    { name: 'Zara Patel',         role: 'VC Associate',            company: 'Harmony Ventures',           status: 'critical',   lastDaysAgo: 9,  notes: 'Evaluating our music tech spinoff.', nextStep: 'Send pitch deck v3', birthday: null },
+
+    // ACTIVE (30-day cadence) — 32 contacts
+    { name: 'Theo Blackwood',     role: 'Music Producer',          company: 'Blackwood Beats',            status: 'active',     lastDaysAgo: 2,  notes: 'Produced our last EP. Great working relationship.', nextStep: null, birthday: null },
+    { name: 'Isla Ferreira',      role: 'Songwriter',              company: 'Freelance',                  status: 'active',     lastDaysAgo: 5,  notes: 'Co-wrote three tracks on the album.', nextStep: 'Discuss next writing session', birthday: null },
+    { name: 'Noel Chambers',      role: 'Startup CEO',             company: 'TuneStack',                  status: 'active',     lastDaysAgo: 8,  notes: 'Building playlist curation tools. Potential partner.', nextStep: null, birthday: null },
+    { name: 'Fatima Al-Rashid',   role: 'Music Blogger',           company: 'The Frequency Blog',         status: 'active',     lastDaysAgo: 10, notes: 'Covered our last two releases positively.', nextStep: null, birthday: null },
+    { name: 'Jasper Okafor',      role: 'Sound Designer',          company: 'Okafor Audio',               status: 'active',     lastDaysAgo: 12, notes: 'Designed sound for our live show.', nextStep: null, birthday: null },
+    { name: 'Celeste Marino',     role: 'Artist Manager',          company: 'Marino Management',          status: 'active',     lastDaysAgo: 14, notes: 'Manages a complementary artist. Good referral source.', nextStep: null, birthday: null },
+    { name: 'Ravi Krishnan',      role: 'Music Accountant',        company: 'Krishnan Financial',         status: 'active',     lastDaysAgo: 16, notes: 'Handles royalty accounting and tax planning.', nextStep: 'Review Q1 royalty statement', birthday: null },
+    { name: 'Lena Brandt',        role: 'Venue Booker',            company: 'Brandt Presents',            status: 'active',     lastDaysAgo: 18, notes: 'Books mid-size venues across the Midwest.', nextStep: null, birthday: null },
+    { name: 'Kofi Mensah',        role: 'Music Videographer',      company: 'Mensah Films',               status: 'active',     lastDaysAgo: 20, notes: 'Shot our last two videos. Excellent eye.', nextStep: null, birthday: null },
+    { name: 'Astrid Holm',        role: 'Startup Founder',         company: 'Setlist.io',                 status: 'active',     lastDaysAgo: 22, notes: 'Building live show analytics. Interesting product.', nextStep: null, birthday: null },
+    { name: 'Demi Osei',          role: 'Vocal Coach',             company: 'Osei Voice Studio',          status: 'active',     lastDaysAgo: 24, notes: 'Works with our lead vocalist weekly.', nextStep: null, birthday: null },
+    { name: 'Luca Ferretti',      role: 'Music Distributor',       company: 'Ferretti Distribution',      status: 'active',     lastDaysAgo: 26, notes: 'Distributes our catalog to DSPs.', nextStep: null, birthday: null },
+    { name: 'Anya Petrov',        role: 'Choreographer',           company: 'Petrov Movement Arts',       status: 'active',     lastDaysAgo: 28, notes: 'Choreographing our live show visuals.', nextStep: null, birthday: null },
+    { name: 'Brendan Foley',      role: 'Music Investor',          company: 'Foley Capital',              status: 'active',     lastDaysAgo: 30, notes: 'Invested in two music startups we know.', nextStep: null, birthday: null },
+    { name: 'Zoe Nakamura',       role: 'Graphic Designer',        company: 'Nakamura Studio',            status: 'active',     lastDaysAgo: 32, notes: 'Designed our album artwork and brand identity.', nextStep: null, birthday: null },
+    { name: 'Idris Obi',          role: 'Drummer',                 company: 'Freelance',                  status: 'active',     lastDaysAgo: 34, notes: 'Session drummer. Incredible feel.', nextStep: null, birthday: null },
+    { name: 'Mara Solis',         role: 'Music Therapist',         company: 'Solis Wellness',             status: 'active',     lastDaysAgo: 0,  notes: 'Collaborating on wellness music project.', nextStep: null, birthday: null },
+    { name: 'Finn Larsen',        role: 'Startup CTO',             company: 'AudioMind',                  status: 'active',     lastDaysAgo: 3,  notes: 'Building AI mastering tools. Exploring partnership.', nextStep: null, birthday: null },
+    { name: 'Cleo Adkins',        role: 'Music Curator',           company: 'Spotify Editorial',          status: 'active',     lastDaysAgo: 6,  notes: 'Curates editorial playlists. Key relationship.', nextStep: 'Pitch new single for playlist', birthday: null },
+    { name: 'Ren Watanabe',       role: 'Bassist',                 company: 'Freelance',                  status: 'active',     lastDaysAgo: 9,  notes: 'Touring bassist. Reliable and professional.', nextStep: null, birthday: null },
+    { name: 'Talia Osei',         role: 'Music Marketer',          company: 'Osei Digital',               status: 'active',     lastDaysAgo: 13, notes: 'Running our digital ad campaigns.', nextStep: 'Review campaign analytics', birthday: null },
+    { name: 'Hugo Blanc',         role: 'Music Lawyer',            company: 'Blanc Legal',                status: 'active',     lastDaysAgo: 17, notes: 'Handles our international licensing.', nextStep: null, birthday: null },
+    { name: 'Nora Stein',         role: 'Startup Advisor',         company: 'Stein Advisory',             status: 'active',     lastDaysAgo: 21, notes: 'Advising on our music tech venture.', nextStep: null, birthday: null },
+    { name: 'Ade Ogundimu',       role: 'Keyboardist',             company: 'Freelance',                  status: 'active',     lastDaysAgo: 25, notes: 'Keys player on the live show.', nextStep: null, birthday: null },
+    { name: 'Petra Svensson',     role: 'Music Supervisor',        company: 'Svensson Sync',              status: 'active',     lastDaysAgo: 29, notes: 'Placed tracks in Scandinavian TV.', nextStep: null, birthday: null },
+    { name: 'Cyrus Farahani',     role: 'Entrepreneur',            company: 'Farahani Ventures',          status: 'active',     lastDaysAgo: 33, notes: 'Building a music NFT marketplace.', nextStep: null, birthday: null },
+    { name: 'Bianca Russo',       role: 'Publicist',               company: 'Russo PR',                   status: 'active',     lastDaysAgo: 1,  notes: 'Handles European press outreach.', nextStep: null, birthday: null },
+    { name: 'Emeka Eze',          role: 'Music Producer',          company: 'Eze Beats',                  status: 'active',     lastDaysAgo: 7,  notes: 'Afrobeats producer. Potential collab.', nextStep: null, birthday: null },
+    { name: 'Lila Johansson',     role: 'Startup Founder',         company: 'Chorus Analytics',           status: 'active',     lastDaysAgo: 11, notes: 'Building fan engagement tools.', nextStep: null, birthday: null },
+    { name: 'Tariq Hassan',       role: 'Music Blogger',           company: 'NME',                        status: 'active',     lastDaysAgo: 15, notes: 'Wrote a glowing review of our last release.', nextStep: null, birthday: null },
+    { name: 'Gwen Moreau',        role: 'Violinist',               company: 'Freelance',                  status: 'active',     lastDaysAgo: 19, notes: 'Strings arranger and session player.', nextStep: null, birthday: null },
+    { name: 'Soren Dahl',         role: 'Music Entrepreneur',      company: 'Dahl Music Group',           status: 'active',     lastDaysAgo: 23, notes: 'Runs an indie label and publishing house.', nextStep: null, birthday: null },
+
+    // PERIPHERAL (60-day cadence) — 30 contacts
+    { name: 'Vivienne Cross',     role: 'Music Journalist',        company: 'Rolling Stone',              status: 'peripheral', lastDaysAgo: 5,  notes: 'Met at SXSW. Warm connection.', nextStep: null, birthday: null },
+    { name: 'Amos Tetteh',        role: 'Festival Promoter',       company: 'Tetteh Events',              status: 'peripheral', lastDaysAgo: 10, notes: 'Runs a major West African music festival.', nextStep: null, birthday: null },
+    { name: 'Ingrid Solberg',     role: 'Music Educator',          company: 'Oslo Conservatory',          status: 'peripheral', lastDaysAgo: 15, notes: 'Connected through a music education conference.', nextStep: null, birthday: null },
+    { name: 'Deon Jacobs',        role: 'Startup Founder',         company: 'Bandcamp Alternative',       status: 'peripheral', lastDaysAgo: 20, notes: 'Building an artist-first music marketplace.', nextStep: null, birthday: null },
+    { name: 'Miriam Osei',        role: 'Music Therapist',         company: 'Osei Healing Arts',          status: 'peripheral', lastDaysAgo: 25, notes: 'Interesting intersection of music and wellness.', nextStep: null, birthday: null },
+    { name: 'Bastian Wolff',      role: 'Music Producer',          company: 'Wolff Studio Berlin',        status: 'peripheral', lastDaysAgo: 28, notes: 'Berlin-based producer. Potential EU collab.', nextStep: null, birthday: null },
+    { name: 'Chioma Eze',         role: 'Artist Manager',          company: 'Eze Management',             status: 'peripheral', lastDaysAgo: 32, notes: 'Manages several rising Afrobeats artists.', nextStep: null, birthday: null },
+    { name: 'Lars Eriksson',      role: 'Music Investor',          company: 'Nordic Music Fund',          status: 'peripheral', lastDaysAgo: 35, notes: 'Invests in Scandinavian music ventures.', nextStep: null, birthday: null },
+    { name: 'Adaeze Obi',         role: 'Songwriter',              company: 'Freelance',                  status: 'peripheral', lastDaysAgo: 38, notes: 'Grammy-nominated songwriter. Warm intro from Isla.', nextStep: null, birthday: null },
+    { name: 'Matteo Conti',       role: 'Music Entrepreneur',      company: 'Conti Music Tech',           status: 'peripheral', lastDaysAgo: 42, notes: 'Building music discovery tools in Milan.', nextStep: null, birthday: null },
+    { name: 'Yara Khalil',        role: 'Music Curator',           company: 'Apple Music Editorial',      status: 'peripheral', lastDaysAgo: 45, notes: 'Curates Arabic and global music playlists.', nextStep: null, birthday: null },
+    { name: 'Declan Murphy',      role: 'Venue Owner',             company: 'The Anchor Dublin',          status: 'peripheral', lastDaysAgo: 48, notes: 'Owns a legendary Dublin music venue.', nextStep: null, birthday: null },
+    { name: 'Suki Park',          role: 'Music Videographer',      company: 'Park Films Seoul',           status: 'peripheral', lastDaysAgo: 52, notes: 'Award-winning director. Met at Cannes.', nextStep: null, birthday: null },
+    { name: 'Emilio Reyes',       role: 'Music Publisher',         company: 'Reyes Ediciones',            status: 'peripheral', lastDaysAgo: 55, notes: 'Latin music publishing specialist.', nextStep: null, birthday: null },
+    { name: 'Fiona Mackay',       role: 'Music Journalist',        company: 'The Guardian',               status: 'peripheral', lastDaysAgo: 58, notes: 'Covers independent music scene.', nextStep: null, birthday: null },
+    { name: 'Obinna Chukwu',      role: 'Startup Founder',         company: 'AfroStream',                 status: 'peripheral', lastDaysAgo: 60, notes: 'Building a streaming platform for African music.', nextStep: null, birthday: null },
+    { name: 'Helene Dubois',      role: 'Music Attorney',          company: 'Dubois Legal Paris',         status: 'peripheral', lastDaysAgo: 3,  notes: 'Specializes in EU music rights.', nextStep: null, birthday: null },
+    { name: 'Kweku Asante',       role: 'Music Producer',          company: 'Asante Sounds',              status: 'peripheral', lastDaysAgo: 8,  notes: 'Highlife and Afrobeats producer.', nextStep: null, birthday: null },
+    { name: 'Nadia Volkov',       role: 'Music Entrepreneur',      company: 'Volkov Records',             status: 'peripheral', lastDaysAgo: 18, notes: 'Runs an indie label in Eastern Europe.', nextStep: null, birthday: null },
+    { name: 'Tomás Rivera',       role: 'Guitarist',               company: 'Freelance',                  status: 'peripheral', lastDaysAgo: 30, notes: 'Flamenco-influenced guitarist. Unique sound.', nextStep: null, birthday: null },
+    { name: 'Aiko Mori',          role: 'Music Technologist',      company: 'Mori Sound Lab',             status: 'peripheral', lastDaysAgo: 40, notes: 'Researching spatial audio for live events.', nextStep: null, birthday: null },
+    { name: 'Seun Adeyemi',       role: 'Festival Director',       company: 'Lagos Music Week',           status: 'peripheral', lastDaysAgo: 50, notes: 'Runs the largest music festival in Nigeria.', nextStep: null, birthday: null },
+    { name: 'Petra Horak',        role: 'Music Blogger',           company: 'Resident Advisor',           status: 'peripheral', lastDaysAgo: 62, notes: 'Covers electronic and experimental music.', nextStep: null, birthday: null },
+    { name: 'Nico Fontaine',      role: 'Startup Investor',        company: 'Fontaine Capital',           status: 'peripheral', lastDaysAgo: 12, notes: 'Interested in music tech investments.', nextStep: null, birthday: null },
+    { name: 'Amelia Osei',        role: 'Music Educator',          company: 'Berklee Online',             status: 'peripheral', lastDaysAgo: 22, notes: 'Teaches music business online.', nextStep: null, birthday: null },
+    { name: 'Javier Morales',     role: 'Music Producer',          company: 'Morales Estudio',            status: 'peripheral', lastDaysAgo: 33, notes: 'Latin trap and reggaeton producer.', nextStep: null, birthday: null },
+    { name: 'Chloe Beaumont',     role: 'Artist Manager',          company: 'Beaumont Mgmt',              status: 'peripheral', lastDaysAgo: 44, notes: 'Manages a major pop act. Good industry intel.', nextStep: null, birthday: null },
+    { name: 'Ike Okafor',         role: 'Music Entrepreneur',      company: 'Okafor Media',               status: 'peripheral', lastDaysAgo: 56, notes: 'Building a music media company.', nextStep: null, birthday: null },
+    { name: 'Sigrid Andersen',    role: 'Composer',                company: 'Andersen Film Music',        status: 'peripheral', lastDaysAgo: 0,  notes: 'Film composer. Potential sync collab.', nextStep: null, birthday: null },
+    { name: 'Rohan Kapoor',       role: 'Music Investor',          company: 'Kapoor Ventures',            status: 'peripheral', lastDaysAgo: 65, notes: 'Bollywood and global music investor.', nextStep: null, birthday: null },
+
+    // OUTREACH (90-day cadence) — 25 contacts
+    { name: 'Elara Voss',         role: 'Music Historian',         company: 'Columbia University',        status: 'longterm',   lastDaysAgo: 8,   notes: 'Writing a book on independent music movements.', nextStep: null, birthday: null },
+    { name: 'Tobias Feld',        role: 'Music Archivist',         company: 'Deutsche Grammophon',        status: 'longterm',   lastDaysAgo: 18,  notes: 'Preserving rare recordings. Fascinating work.', nextStep: null, birthday: null },
+    { name: 'Amara Kone',         role: 'Ethnomusicologist',       company: 'UCLA',                       status: 'longterm',   lastDaysAgo: 28,  notes: 'Researching West African music traditions.', nextStep: null, birthday: null },
+    { name: 'Sven Lindberg',      role: 'Music Entrepreneur',      company: 'Lindberg Music Group',       status: 'longterm',   lastDaysAgo: 38,  notes: 'Built and sold a major streaming company.', nextStep: null, birthday: null },
+    { name: 'Nia Osei',           role: 'Music Philanthropist',    company: 'Osei Foundation',            status: 'longterm',   lastDaysAgo: 48,  notes: 'Funds music education in underserved communities.', nextStep: null, birthday: null },
+    { name: 'Riku Mäkinen',       role: 'Music Producer',          company: 'Mäkinen Studio Helsinki',    status: 'longterm',   lastDaysAgo: 58,  notes: 'Nordic folk and electronic fusion producer.', nextStep: null, birthday: null },
+    { name: 'Adwoa Mensah',       role: 'Music Curator',           company: 'Tidal Editorial',            status: 'longterm',   lastDaysAgo: 68,  notes: 'Curates global music playlists.', nextStep: null, birthday: null },
+    { name: 'Cormac Doyle',       role: 'Music Venue Operator',    company: 'Doyle Live Events',          status: 'longterm',   lastDaysAgo: 78,  notes: 'Operates venues across Ireland and UK.', nextStep: null, birthday: null },
+    { name: 'Yemi Adeyemi',       role: 'Music Entrepreneur',      company: 'Adeyemi Music Holdings',     status: 'longterm',   lastDaysAgo: 88,  notes: 'Built a major African music distribution company.', nextStep: null, birthday: null },
+    { name: 'Petra Blum',         role: 'Music Journalist',        company: 'Der Spiegel',                status: 'longterm',   lastDaysAgo: 92,  notes: 'Covers global music trends for German press.', nextStep: null, birthday: null },
+    { name: 'Olu Bello',          role: 'Music Lawyer',            company: 'Bello & Associates',         status: 'longterm',   lastDaysAgo: 3,   notes: 'Specializes in African music rights.', nextStep: null, birthday: null },
+    { name: 'Mia Lindqvist',      role: 'Startup Founder',         company: 'Melodia AI',                 status: 'longterm',   lastDaysAgo: 14,  notes: 'Building AI-powered music composition tools.', nextStep: null, birthday: null },
+    { name: 'Kwame Boateng',      role: 'Music Producer',          company: 'Boateng Beats',              status: 'longterm',   lastDaysAgo: 25,  notes: 'Highlife and Afrobeats producer based in Accra.', nextStep: null, birthday: null },
+    { name: 'Ingrid Larsen',      role: 'Music Educator',          company: 'Royal College of Music',     status: 'longterm',   lastDaysAgo: 35,  notes: 'Teaches music entrepreneurship.', nextStep: null, birthday: null },
+    { name: 'Dayo Okonkwo',       role: 'Music Investor',          company: 'Okonkwo Capital',            status: 'longterm',   lastDaysAgo: 45,  notes: 'Invests in African music ventures.', nextStep: null, birthday: null },
+    { name: 'Freya Hansen',       role: 'Composer',                company: 'Hansen Film Scores',         status: 'longterm',   lastDaysAgo: 55,  notes: 'Award-winning film composer.', nextStep: null, birthday: null },
+    { name: 'Emeka Nwosu',        role: 'Music Entrepreneur',      company: 'Nwosu Media',                status: 'longterm',   lastDaysAgo: 65,  notes: 'Runs a music media and events company.', nextStep: null, birthday: null },
+    { name: 'Lena Vogel',         role: 'Music Publisher',         company: 'Vogel Musikverlag',          status: 'longterm',   lastDaysAgo: 75,  notes: 'German music publisher with global catalog.', nextStep: null, birthday: null },
+    { name: 'Ade Bankole',        role: 'Music Technologist',      company: 'Bankole Tech',               status: 'longterm',   lastDaysAgo: 85,  notes: 'Building blockchain royalty tools.', nextStep: null, birthday: null },
+    { name: 'Celia Moreau',       role: 'Music Journalist',        company: 'Les Inrockuptibles',         status: 'longterm',   lastDaysAgo: 0,   notes: 'Covers French and global music scenes.', nextStep: null, birthday: null },
+    { name: 'Nils Bergstrom',     role: 'Music Entrepreneur',      company: 'Bergstrom Music',            status: 'longterm',   lastDaysAgo: 20,  notes: 'Built a successful Nordic music licensing company.', nextStep: null, birthday: null },
+    { name: 'Amina Diallo',       role: 'Vocalist',                company: 'Freelance',                  status: 'longterm',   lastDaysAgo: 40,  notes: 'Griot tradition vocalist. Extraordinary talent.', nextStep: null, birthday: null },
+    { name: 'Piotr Kowalski',     role: 'Music Investor',          company: 'Kowalski Fund',              status: 'longterm',   lastDaysAgo: 60,  notes: 'Eastern European music and media investor.', nextStep: null, birthday: null },
+    { name: 'Yuki Sato',          role: 'Music Producer',          company: 'Sato Sound Tokyo',           status: 'longterm',   lastDaysAgo: 80,  notes: 'J-pop and city pop producer.', nextStep: null, birthday: null },
+    { name: 'Ife Adeyemi',        role: 'Music Entrepreneur',      company: 'Adeyemi Creative',           status: 'longterm',   lastDaysAgo: 95,  notes: 'Runs a creative agency for music artists.', nextStep: null, birthday: null },
+  ];
+
+  const contacts = raw.map((r, i) => {
+    const created = { id: i * 100 + 1, type: 'created', date: ago(r.lastDaysAgo + 30 + Math.floor(Math.random() * 200)) };
+    return {
+      id: i + 1,
+      name: r.name,
+      role: r.role,
+      company: r.company,
+      status: r.status,
+      lastPing: ago(r.lastDaysAgo),
+      createdAt: created.date,
+      notes: r.notes,
+      nextStep: r.nextStep || null,
+      birthday: r.birthday || null,
+      history: [created],
+      mutuals: [],
+    };
+  });
+
+  // ── Assign random mutual connections ──
+  // Strategy: shuffle all IDs, then assign each contact a target mutual count
+  // drawn from a spectrum: 20 contacts get 0, 10 contacts get 20-25, rest get 1-15.
+  const allIds = contacts.map(c => c.id);
+  const n = allIds.length;
+
+  // Seeded shuffle (Fisher-Yates with a simple LCG)
+  function seededShuffle(arr, seed) {
+    const a = [...arr];
+    let s = seed;
+    for (let i = a.length - 1; i > 0; i--) {
+      s = (s * 1664525 + 1013904223) & 0xffffffff;
+      const j = Math.abs(s) % (i + 1);
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  const shuffled = seededShuffle(allIds, 7331);
+
+  // Assign target mutual counts per contact
+  const targetMap = new Map();
+  // First 20 → 0 mutuals
+  shuffled.slice(0, 20).forEach(id => targetMap.set(id, 0));
+  // Next 10 → 20–25 mutuals (highly connected hubs)
+  shuffled.slice(20, 30).forEach((id, i) => targetMap.set(id, 20 + (i % 6)));
+  // Remaining 85 → 1–15 mutuals (smooth spectrum)
+  shuffled.slice(30).forEach((id, i) => {
+    const t = i / (n - 30);
+    targetMap.set(id, Math.round(1 + t * 14));
+  });
+
+  // Build mutual pairs greedily: for each contact sorted by target desc,
+  // connect to random others who still have capacity.
+  const mutualSets = new Map(allIds.map(id => [id, new Set()]));
+  const sortedByTarget = [...allIds].sort((a, b) => (targetMap.get(b) || 0) - (targetMap.get(a) || 0));
+
+  function seededRandInt(seed, max) {
+    seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+    return { val: Math.abs(seed) % max, seed };
+  }
+
+  let rSeed = 99991;
+  for (const id of sortedByTarget) {
+    const target = targetMap.get(id) || 0;
+    const current = mutualSets.get(id);
+    if (current.size >= target) continue;
+    // Candidates: others who haven't hit their target and aren't already connected
+    const candidates = allIds.filter(oid =>
+      oid !== id &&
+      !current.has(oid) &&
+      mutualSets.get(oid).size < (targetMap.get(oid) || 0)
+    );
+    // Shuffle candidates with seed
+    const shuffledCandidates = seededShuffle(candidates, rSeed++);
+    for (const oid of shuffledCandidates) {
+      if (current.size >= target) break;
+      current.add(oid);
+      mutualSets.get(oid).add(id);
+    }
+  }
+
+  // Write mutual arrays back (bidirectional, deduplicated)
+  contacts.forEach(c => {
+    c.mutuals = [...mutualSets.get(c.id)];
+  });
+
+  return contacts;
+}
+
+const STORAGE_KEY = 'mura_v2';
+function load() {
+  try { const r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch (_) {}
+  return buildSeed();
+}
+function save(cs) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cs)); } catch (_) {} }
+
+// ── Boot ──
+const _bootCadences = loadCadences();
+rebuildStatus(_bootCadences);
+const _bootChannels = loadChannels();
+PING_CHANNELS = channelsToConst(_bootChannels);
+
+let S = {
+  contacts:    load(),
+  cadences:    _bootCadences,
+  channels:    _bootChannels,
+  filter:      null,
+  focusFilter: null,
+  search:      '',
+  selectedId:  null,
+  modal:       null,
+  view:        'contacts',
+  settingsTab: 'cadences',
+};
+
+function set(patch, skipRender) { Object.assign(S, patch); if (!skipRender) render(); }
+
+function applyDateMask(input) {
+  input.addEventListener('keydown', e => { if (e.key === 'Backspace') { const v = input.value; if (v.endsWith('/')) { e.preventDefault(); input.value = v.slice(0,-1); input.dispatchEvent(new Event('input')); } } });
+  input.addEventListener('input', () => { let digits = input.value.replace(/\D/g,'').slice(0,8); let out = ''; if (digits.length>4) out=digits.slice(0,2)+'/'+digits.slice(2,4)+'/'+digits.slice(4); else if (digits.length>2) out=digits.slice(0,2)+'/'+digits.slice(2); else out=digits; input.value=out; });
+}
+function daysSince(iso) { if (!iso) return Infinity; return Math.floor((Date.now()-new Date(iso).getTime())/86400000); }
+function isOverdue(c) { const cfg=STATUS[c.status]; if (!cfg) return false; return daysSince(c.lastPing)>=cfg.pingDays; }
+function isBirthday(c) {
+  if (!c.birthday) return false;
+  const parts = c.birthday.split('/');
+  if (parts.length < 2) return false;
+  const bMonth = parseInt(parts[0],10)-1, bDay = parseInt(parts[1],10);
+  if (isNaN(bMonth)||isNaN(bDay)) return false;
+  const today = new Date();
+  const tDoy = today.getMonth()*31+today.getDate(), bDoy = bMonth*31+bDay;
+  const diff = bDoy-tDoy;
+  return diff>=0&&diff<=7;
+}
+function urgency(c) { const cfg=STATUS[c.status]; if (!cfg) return 0; return daysSince(c.lastPing)/cfg.pingDays; }
+function fmtAgo(days) { if (days===Infinity) return 'never'; if (days===0) return 'today'; if (days===1) return 'yesterday'; if (days<7) return `${days}d ago`; if (days<30) return `${Math.floor(days/7)}w ago`; if (days<365) return `${Math.floor(days/30)}mo ago`; return `${Math.floor(days/365)}y ago`; }
+function fmtAgoLong(days) { if (days===Infinity) return 'never'; if (days===0) return 'today'; if (days===1) return 'yesterday'; if (days<7) return `${days} day${days===1?'':'s'} ago`; if (days<30) { const w=Math.floor(days/7); return `${w} week${w===1?'':'s'} ago`; } if (days<365) { const mo=Math.floor(days/30); return `${mo} month${mo===1?'':'s'} ago`; } const y=Math.floor(days/365); return `${y} year${y===1?'':'s'} ago`; }
+function fmtDate(iso) { if (!iso) return ''; return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function initials(name) { return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+function channelOf(key) { return PING_CHANNELS.find(m=>m.key===key); }
+function uid() { return Date.now()+Math.floor(Math.random()*999); }
+
+function filtered() {
+  let list = S.contacts;
+  if (S.filter) list = list.filter(c=>c.status===S.filter);
+  if (S.focusFilter) { const tag=S.focusFilter.toLowerCase(); list=list.filter(c=>(c.role||'').toLowerCase().split(/\s+/).includes(tag)); }
+  if (S.search.trim()) { const q=S.search.toLowerCase(); list=list.filter(c=>c.name.toLowerCase().includes(q)||(c.role||'').toLowerCase().includes(q)||(c.notes||'').toLowerCase().includes(q)); }
+  return [...list].sort((a,b)=>urgency(b)-urgency(a));
+}
+
+function pingContact(id, channel, note, returnTo) {
+  const now = new Date().toISOString();
+  const m = channelOf(channel);
+  S.contacts = S.contacts.map(c => { if (c.id!==id) return c; const entry={id:uid(),channel,verb:m?.verb||'Contacted',icon:m?.icon||'',date:now,note:note?.trim()||null}; return {...c,lastPing:now,lastChannel:channel,history:[entry,...(c.history||[])]}; });
+  save(S.contacts);
+  set({modal:returnTo||null},true);
+  renderModal();
+  if (returnTo?.type==='contact') { setTimeout(()=>{render(true);},150); } else { render(); }
+}
+
+function syncMutuals(contactId, newMutualIds) {
+  const next=new Set(newMutualIds), prev=new Set((S.contacts.find(c=>c.id===contactId)?.mutuals)||[]);
+  S.contacts=S.contacts.map(c=>{if(c.id===contactId)return c;const m=new Set(c.mutuals||[]);if(next.has(c.id)&&!m.has(contactId))m.add(contactId);if(!next.has(c.id)&&prev.has(c.id)&&m.has(contactId))m.delete(contactId);return{...c,mutuals:[...m]};});
+}
+
+function addContact(form) {
+  const now=new Date().toISOString();
+  const created={id:uid(),type:'created',date:now};
+  const c={...form,id:uid(),createdAt:now,history:[created],lastPing:form.lastPing?new Date(form.lastPing).toISOString():now};
+  S.contacts=[...S.contacts,c];
+  syncMutuals(c.id,c.mutuals||[]);
+  save(S.contacts);
+  set({modal:{type:'contact',contactId:c.id}});
+}
+
+function editContact(form) {
+  S.contacts=S.contacts.map(c=>c.id===form.id?{...form,history:c.history||[],lastPing:form.lastPing?new Date(form.lastPing).toISOString():c.lastPing}:c);
+  syncMutuals(form.id,form.mutuals||[]);
+  save(S.contacts);
+  renderModal();
+  render();
+}
+function editContactSilent(form) {
+  S.contacts=S.contacts.map(c=>c.id===form.id?{...form,history:c.history||[],lastPing:form.lastPing?new Date(form.lastPing).toISOString():c.lastPing}:c);
+  syncMutuals(form.id,form.mutuals||[]);
+  save(S.contacts);
+  renderFeedOnly();
+}
+
+function removeContact(id) {
+  set({modal:{type:'confirm',title:'Delete Contact?',confirmLabel:'Delete Contact',onConfirm:()=>{S.contacts=S.contacts.filter(x=>x.id!==id);save(S.contacts);set({modal:null});}}});
+}
+
+function el(tag,attrs,...kids) {
+  const e=document.createElement(tag);
+  if(attrs)Object.entries(attrs).forEach(([k,v])=>{if(k==='class')e.className=v;else if(k==='style'&&typeof v==='object')Object.assign(e.style,v);else if(k.startsWith('on')&&typeof v==='function')e.addEventListener(k.slice(2).toLowerCase(),v);else e.setAttribute(k,v);});
+  kids.flat(Infinity).forEach(kid=>{if(kid==null||kid===false)return;e.appendChild(typeof kid==='string'?document.createTextNode(kid):kid);});
+  return e;
+}
+function div(cls,...kids){return el('div',{class:cls},...kids);}
+function txt(t){return document.createTextNode(t);}
+
+function StatusPill(status) {
+  const cfg=STATUS[status]||{label:status,bg:'#EBEBEA',text:'#6B6B66'};
+  return el('span',{class:'status-pill',style:{background:cfg.bg,color:cfg.text}},cfg.label);
+}
+function PingRing(c) {
+  const cfg=STATUS[c.status]; if(!cfg)return null;
+  const days=daysSince(c.lastPing), ratio=days===Infinity?1:Math.min(days/cfg.pingDays,1), over=isOverdue(c);
+  const r=7,stroke=1.75,circ=2*Math.PI*r,fill=ratio*circ,color=cfg.dot;
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width','20');svg.setAttribute('height','20');svg.setAttribute('viewBox','0 0 20 20');
+  svg.style.flexShrink='0';svg.style.transform='rotate(-90deg)';
+  const track=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  track.setAttribute('cx','10');track.setAttribute('cy','10');track.setAttribute('r',r);
+  track.setAttribute('fill','none');track.setAttribute('stroke',color);track.setAttribute('stroke-width',stroke);track.setAttribute('stroke-opacity','0.12');
+  svg.appendChild(track);
+  const arc=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  arc.setAttribute('cx','10');arc.setAttribute('cy','10');arc.setAttribute('r',r);
+  arc.setAttribute('fill','none');arc.setAttribute('stroke',color);arc.setAttribute('stroke-width',stroke);arc.setAttribute('stroke-linecap','round');
+  arc.setAttribute('stroke-dasharray',`${fill} ${circ}`);arc.setAttribute('stroke-opacity',over?'1':'0.7');
+  if(over)arc.style.animation='ringPulse 1.8s ease-in-out infinite';
+  svg.appendChild(arc);
+  return svg;
+}
+function DetailPingRing(c) {
+  const cfg=STATUS[c.status]; if(!cfg)return null;
+  const days=daysSince(c.lastPing), over=isOverdue(c), remaining=days===Infinity?cfg.pingDays:cfg.pingDays-days;
+  const ratio=days===Infinity?0:Math.min(days/cfg.pingDays,1), color=cfg.dot;
+  let label;
+  if(days===Infinity)label=`Reconnect in ${cfg.pingDays} days`;
+  else if(over){const late=days-cfg.pingDays;label=late===1?'1 day overdue':`${late} days overdue`;}
+  else if(remaining===0)label='Reach out today';
+  else if(remaining===1)label='Reconnect tomorrow';
+  else label=`Reconnect in ${remaining} days`;
+  const size=200,r=90,stroke=2.5,circ=2*Math.PI*r,fill=ratio*circ;
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width',size);svg.setAttribute('height',size);svg.setAttribute('viewBox',`0 0 ${size} ${size}`);
+  svg.style.transform='rotate(-90deg)';
+  const track=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  track.setAttribute('cx',size/2);track.setAttribute('cy',size/2);track.setAttribute('r',r);
+  track.setAttribute('fill','none');track.setAttribute('stroke',color);track.setAttribute('stroke-width',stroke);track.setAttribute('stroke-opacity','0.12');
+  svg.appendChild(track);
+  const arc=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  arc.setAttribute('cx',size/2);arc.setAttribute('cy',size/2);arc.setAttribute('r',r);
+  arc.setAttribute('fill','none');arc.setAttribute('stroke',color);arc.setAttribute('stroke-width',stroke);arc.setAttribute('stroke-linecap','round');
+  arc.setAttribute('stroke-dasharray',`${fill} ${circ}`);arc.setAttribute('stroke-opacity',over?'1':'0.75');
+  if(over)arc.style.animation='ringPulse 1.8s ease-in-out infinite';
+  svg.appendChild(arc);
+  const wrap=el('div',{class:'detail-ping-ring-wrap'});
+  wrap.appendChild(svg);
+  const labelEl=el('div',{class:'detail-ping-ring-label'+(over?' detail-ping-ring-label--over':'')},label);
+  labelEl.style.color=over?color:'var(--ink-3)';
+  wrap.appendChild(labelEl);
+  return wrap;
+}
+
+function ContactCard(c) {
+  const days=daysSince(c.lastPing), cfg=STATUS[c.status], over=isOverdue(c);
+  const card=el('div',{class:`card${over?' overdue':''}`,style:over&&cfg?{borderLeftColor:cfg.dot}:{},onClick:()=>set({modal:{type:'contact',contactId:c.id}})});
+  const row=div('card-row');
+  const info=div('card-info');
+  info.appendChild(el('div',{class:'card-name'},c.name+(isBirthday(c)?' 🎉':'')));
+  const lastChannel=channelOf(c.lastChannel);
+  const pingLabel=days===Infinity?'Never contacted':lastChannel?`${lastChannel.verb} ${fmtAgoLong(days)}`:fmtAgoLong(days);
+  const subParts=[];
+  if(c.role)subParts.push(el('span',{},c.role));
+  if(c.role)subParts.push(el('span',{class:'card-sub-divider'},'|'));
+  const pingSpan=el('span',{},pingLabel);
+  if(over&&cfg)pingSpan.style.color=cfg.dot;
+  subParts.push(pingSpan);
+  const subEl=el('div',{class:'card-org'});
+  subParts.forEach(p=>subEl.appendChild(p));
+  info.appendChild(subEl);
+  row.appendChild(info);
+  const pillWrap=div('card-pill-wrap');
+  const ring=PingRing(c);
+  if(ring)pillWrap.appendChild(ring);
+  pillWrap.appendChild(StatusPill(c.status));
+  row.appendChild(pillWrap);
+  card.appendChild(row);
+  const actions=div('card-actions');
+  PING_CHANNELS.forEach(m=>{
+    const btn=el('button',{class:'card-action-btn',title:m.label,onClick:(e)=>{e.stopPropagation();set({modal:{type:'ping',contactId:c.id,channelKey:m.key}});}});
+    btn.innerHTML=m.icon;
+    actions.appendChild(btn);
+  });
+  card.appendChild(actions);
+  return card;
+}
+
+function ContactDetailModal(contactId) {
+  const c=S.contacts.find(x=>x.id===contactId); if(!c)return null;
+  const close=()=>set({modal:null});
+  const focusEl=el('div',{class:'detail-header-focus'},c.role||'');
+  if(!c.role)focusEl.style.display='none';
+  const cadenceCfg=()=>STATUS[c.status];
+  const pillEl=el('span',{class:'status-pill'});
+  const refreshPill=()=>{const cfg=cadenceCfg();if(cfg){pillEl.style.background=cfg.bg;pillEl.style.color=cfg.text;pillEl.textContent=cfg.label;}};
+  refreshPill();
+
+  function editableField(container,label,key,type,placeholder,onUpdate) {
+    const wrap=div('form-group');
+    wrap.appendChild(el('label',{class:'form-label'},label));
+    const input=type==='textarea'?el('textarea',{class:'form-input',rows:'3',placeholder:placeholder||''}):el('input',{class:'form-input',type:type||'text',placeholder:placeholder||''});
+    input.value=c[key]||'';
+    input.addEventListener('input',()=>{c[key]=input.value;editContactSilent({...c,[key]:input.value});if(onUpdate)onUpdate(input.value);});
+    if(type!=='textarea'){input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();input.blur();}});}
+    wrap.appendChild(input);
+    container.appendChild(wrap);
+  }
+
+  const viewPane=div('detail-view-pane');
+  const lastDays=daysSince(c.lastPing), lastChannel=channelOf(c.lastChannel);
+  const _lastRaw=lastDays===Infinity?'Never':lastChannel?(lastDays===0?`${lastChannel.verb} today`:lastDays===1?`${lastChannel.verb} yesterday`:`${lastChannel.verb} ${fmtAgoLong(lastDays)}`):fmtAgoLong(lastDays);
+  const lastStr=_lastRaw.charAt(0).toUpperCase()+_lastRaw.slice(1);
+  const lastWrap=div('detail-field detail-field-display-only');
+  lastWrap.appendChild(el('div',{class:'detail-field-label'},'Last Connection'));
+  lastWrap.appendChild(el('div',{class:'detail-field-value'},lastStr));
+  viewPane.appendChild(lastWrap);
+  const displayField=(label,val)=>{if(!val)return;const wrap=div('detail-field detail-field-display-only');wrap.appendChild(el('div',{class:'detail-field-label'},label));wrap.appendChild(el('div',{class:'detail-field-value'},val));viewPane.appendChild(wrap);};
+  displayField('Associated With',c.company);
+  displayField('Birthday',c.birthday);
+  displayField('Next Step',c.nextStep);
+  displayField('Notes',c.notes);
+
+  const mutualsViewWrap=div('detail-field detail-field-mutuals');
+  mutualsViewWrap.appendChild(el('div',{class:'detail-field-label'},'Mutuals'));
+  const renderMutualsView=()=>{
+    const existing=mutualsViewWrap.querySelector('.mutuals-display-wrap');if(existing)existing.remove();
+    const ids=c.mutuals||[];
+    if(ids.length===0){const d=div('mutuals-display-wrap');d.appendChild(el('span',{class:'detail-field-value placeholder'},'—'));mutualsViewWrap.appendChild(d);}
+    else{const display=div('mutuals-display-wrap mutuals-display-wrap--has-chips');const row=div('mutuals-scroll-row');ids.forEach(mid=>{const mc=S.contacts.find(x=>x.id===mid);if(mc){const chip=el('span',{class:'chip mutual-chip-tag mutual-chip-link'},mc.name);chip.addEventListener('click',(e)=>{e.stopPropagation();set({modal:{type:'contact',contactId:mc.id}});});row.appendChild(chip);}});display.appendChild(row);mutualsViewWrap.appendChild(display);requestAnimationFrame(()=>{const updateFade=()=>{display.classList.toggle('at-end',row.scrollLeft+row.clientWidth>=row.scrollWidth-1);display.classList.toggle('at-start',row.scrollLeft<=0);};row.removeEventListener('scroll',row._fadeHandler);row._fadeHandler=updateFade;row.addEventListener('scroll',updateFade);updateFade();});}
+  };
+  renderMutualsView();
+  viewPane.appendChild(mutualsViewWrap);
+
+  const hist=c.history||[];
+  if(hist.length){
+    viewPane.appendChild(el('div',{class:'detail-field-label',style:{padding:'14px 0 6px'}},'History'));
+    hist.forEach(e=>{
+      if(e.type==='created'){const iconEl=el('div',{class:'history-icon'});iconEl.textContent='·';viewPane.appendChild(div('history-item',iconEl,el('div',{class:'history-body'},el('div',{class:'history-verb'},'Added to contacts'),el('div',{class:'history-date'},fmtDate(e.date)))));return;}
+      const m=channelOf(e.channel);const icon=m?.icon||e.icon||'';const verb=m?.verb||e.verb||'Contacted';
+      const iconEl=el('div',{class:'history-icon'});if(icon)iconEl.innerHTML=icon;else iconEl.textContent='·';
+      viewPane.appendChild(div('history-item',iconEl,el('div',{class:'history-body'},el('div',{class:'history-verb'},verb),e.note?el('div',{class:'history-note'},e.note):null,el('div',{class:'history-date'},fmtDate(e.date)))));
+    });
+  }
+
+  const editPane=div('detail-edit-pane');
+  editableField(editPane,'Name','name','text','e.g. Marcus Delray',(val)=>{nameEl.textContent=val||c.name;});
+  editableField(editPane,'Focus','role','text','e.g. Record Producer',(val)=>{focusEl.textContent=val;focusEl.style.display=val?'':'none';});
+  editableField(editPane,'Associated With','company','text','e.g. Delray Sound Studios');
+  editableField(editPane,'Birthday','birthday','text','MM/DD/YYYY');
+  applyDateMask(editPane.querySelector('input[placeholder="MM/DD/YYYY"]'));
+  editableField(editPane,'Next Step','nextStep','text','e.g. Send demo package');
+  editableField(editPane,'Notes','notes','textarea','Add context about this person…');
+
+  const cadenceWrap=div('form-group');
+  cadenceWrap.appendChild(el('label',{class:'form-label'},'Cadence'));
+  const cadenceSelect=el('select',{class:'form-input'});
+  S.cadences.forEach(cadence=>{const opt=el('option',{value:cadence.id},`${cadence.label} (${fmtDays(cadence.days)} cadence)`);if(cadence.id===c.status)opt.selected=true;cadenceSelect.appendChild(opt);});
+  cadenceSelect.addEventListener('change',()=>{c.status=cadenceSelect.value;editContactSilent({...c});refreshPill();const fresh=DetailPingRing(c);if(fresh&&pingRingEl&&pingRingEl.parentNode){fresh.style.display=editOpen?'none':'';pingRingEl.parentNode.replaceChild(fresh,pingRingEl);pingRingEl=fresh;}});
+  cadenceWrap.appendChild(cadenceSelect);
+  editPane.appendChild(cadenceWrap);
+
+  const mutualsEditWrap=div('detail-field detail-field-mutuals');
+  mutualsEditWrap.appendChild(el('label',{class:'form-label',style:{display:'block',marginBottom:'8px'}},'Mutuals'));
+  const renderMutualsEdit=()=>{
+    const existing=mutualsEditWrap.querySelector('.mutuals-display-wrap, .mutuals-editor');if(existing)existing.remove();
+    const ids=c.mutuals||[];
+    if(ids.length===0){const display=div('mutuals-display-wrap');display.appendChild(el('span',{class:'detail-field-value placeholder'},'Tap to add…'));display.addEventListener('click',openMutualsEditor);mutualsEditWrap.appendChild(display);}
+    else{const display=div('mutuals-display-wrap mutuals-display-wrap--has-chips');const row=div('mutuals-scroll-row');ids.forEach(mid=>{const mc=S.contacts.find(x=>x.id===mid);if(mc)row.appendChild(el('span',{class:'chip mutual-chip-tag'},mc.name));});display.appendChild(row);display.addEventListener('click',openMutualsEditor);mutualsEditWrap.appendChild(display);requestAnimationFrame(()=>{const updateFade=()=>{display.classList.toggle('at-end',row.scrollLeft+row.clientWidth>=row.scrollWidth-1);display.classList.toggle('at-start',row.scrollLeft<=0);};row.removeEventListener('scroll',row._fadeHandler);row._fadeHandler=updateFade;row.addEventListener('scroll',updateFade);updateFade();});}
+  };
+  const openMutualsEditor=()=>{
+    const existing=mutualsEditWrap.querySelector('.mutuals-display-wrap, .mutuals-editor');if(existing)existing.remove();
+    const editor=div('mutuals-editor');const others=S.contacts.filter(x=>x.id!==c.id);const selected=new Set(c.mutuals||[]);
+    const search=el('input',{class:'mutuals-search',type:'text',placeholder:'Search contacts…'});editor.appendChild(search);
+    const list=div('mutuals-list');
+    const renderList=(q)=>{list.innerHTML='';const filtered=q?others.filter(x=>x.name.toLowerCase().includes(q.toLowerCase())):others;filtered.forEach(mc=>{const row=div('mutual-option');const checked=selected.has(mc.id);const tick=el('span',{class:'mutual-tick'+(checked?' active':'')},'✓');const name=el('span',{class:'mutual-option-name'},mc.name);row.appendChild(tick);row.appendChild(name);row.addEventListener('click',(e)=>{e.stopPropagation();if(selected.has(mc.id)){selected.delete(mc.id);tick.className='mutual-tick';}else{selected.add(mc.id);tick.className='mutual-tick active';}});list.appendChild(row);});};
+    renderList('');search.addEventListener('input',()=>renderList(search.value));setTimeout(()=>search.focus(),10);editor.appendChild(list);
+    const done=el('button',{class:'mutuals-done-btn'},'Done');
+    done.addEventListener('click',(e)=>{e.stopPropagation();c.mutuals=[...selected];editContactSilent({...c,mutuals:c.mutuals});renderMutualsEdit();renderMutualsView();});
+    editor.appendChild(done);mutualsEditWrap.appendChild(editor);
+  };
+  renderMutualsEdit();
+  editPane.appendChild(mutualsEditWrap);
+  const doneBtn=el('button',{class:'btn-primary',style:{marginTop:'16px',width:'100%'}},'Done');
+  doneBtn.addEventListener('click',()=>{set({modal:null});});
+  editPane.appendChild(doneBtn);
+  editPane.appendChild(el('button',{class:'btn-danger',style:{marginTop:'8px',width:'100%'},onClick:()=>removeContact(c.id)},'Delete Contact'));
+
+  const nameEl=el('div',{class:'detail-header-name'},c.name);
+  const pingRow=div('detail-ping-row');
+  PING_CHANNELS.forEach(m=>{const btn=el('button',{class:'detail-ping-btn',title:m.label,onClick:()=>set({modal:{type:'ping',contactId:c.id,channelKey:m.key,returnTo:{type:'contact',contactId:c.id}}})});btn.innerHTML=m.icon;pingRow.appendChild(btn);});
+
+  let editOpen=false;
+  const gearBtn=el('button',{class:'detail-corner-btn detail-gear-btn',title:'Edit contact'});
+  gearBtn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>';
+  gearBtn.addEventListener('click',()=>{editOpen=!editOpen;editPane.classList.toggle('detail-edit-pane--open',editOpen);viewPane.classList.toggle('detail-view-pane--hidden',editOpen);pingRow.style.display=editOpen?'none':'';pingRow.style.marginBottom=editOpen?'0':'';if(pingRingEl)pingRingEl.style.display=editOpen?'none':'';gearBtn.classList.toggle('detail-corner-btn--active',editOpen);modalEl.classList.toggle('modal--edit-mode',editOpen);});
+
+  const closeBtn=el('button',{class:'detail-corner-btn detail-close-btn',title:'Close',onClick:close});
+  closeBtn.innerHTML='✕';
+  let pingRingEl=DetailPingRing(c);
+
+  const modalEl=el('div',{class:'modal modal-wide'},
+    el('div',{class:'detail-modal-header'},gearBtn,el('div',{class:'detail-header-center'},nameEl,focusEl,pingRingEl,pillEl),closeBtn),
+    pingRow,viewPane,editPane
+  );
+  return el('div',{class:'modal-backdrop',onClick:e=>{if(e.target.classList.contains('modal-backdrop'))close();}},modalEl);
+}
+
+function ConfirmModal({title,confirmLabel,onConfirm}) {
+  return el('div',{class:'modal-backdrop'},el('div',{class:'confirm-modal'},el('div',{class:'confirm-title'},title),el('div',{class:'confirm-actions'},el('button',{class:'confirm-btn-destroy',onClick:()=>{set({modal:null},true);onConfirm();}},confirmLabel||'Delete'),el('button',{class:'confirm-btn-cancel',onClick:()=>set({modal:null})},'Cancel'))));
+}
+
+function renderModal() {
+  const root=document.getElementById('modal-root'), root2=document.getElementById('modal-root-2');
+  const {type}=S.modal||{};
+  if(type==='ping'&&S.modal.returnTo?.type==='contact'){
+    const contactId=S.modal.returnTo.contactId;
+    if(root._contactId!==contactId){root.innerHTML='';root.appendChild(ContactDetailModal(contactId));root._contactId=contactId;}
+    root2.innerHTML='';const top=PingModal(S.modal.contactId,S.modal.channelKey);top.classList.add('modal-backdrop-top');root2.appendChild(top);return;
+  }
+  if(type==='contact'&&root._contactId===S.modal.contactId&&root2.hasChildNodes()){
+    const leaving=root2.firstChild;
+    const refresh=()=>{root2.innerHTML='';root.innerHTML='';root._contactId=S.modal.contactId;const fresh=ContactDetailModal(S.modal.contactId);const card=fresh.querySelector('.modal');if(card)card.style.animation='fadeIn 0.15s ease-out';root.appendChild(fresh);};
+    if(leaving){leaving.style.animation='fadeOut 0.12s ease-in forwards';leaving.addEventListener('animationend',refresh,{once:true});}else{refresh();}
+    return;
+  }
+  root.innerHTML='';root._contactId=null;root2.innerHTML='';
+  if(!S.modal)return;
+  let content;
+  if(type==='contact'){content=ContactDetailModal(S.modal.contactId);root._contactId=S.modal.contactId;}
+  if(type==='ping')content=PingModal(S.modal.contactId,S.modal.channelKey);
+  if(type==='add')content=ContactFormModal(null);
+  if(type==='history')content=HistoryModal(S.modal.contact);
+  if(type==='cadence-add')content=CadenceFormModal(null);
+  if(type==='cadence-edit')content=CadenceFormModal(S.modal.cadence);
+  if(type==='channel-add')content=ChannelFormModal(null);
+  if(type==='channel-edit')content=ChannelFormModal(S.modal.channel);
+  if(type==='confirm')content=ConfirmModal(S.modal);
+  if(content)root.appendChild(content);
+}
+
+function PingModal(contactId,channelKey) {
+  const c=S.contacts.find(x=>x.id===contactId), m=channelOf(channelKey), returnTo=S.modal?.returnTo||null;
+  const dismiss=()=>{if(returnTo?.type==='contact'){const root2=document.getElementById('modal-root-2');const leaving=root2.firstChild;S.modal=returnTo;if(leaving){leaving.style.animation='fadeOut 0.12s ease-in forwards';leaving.addEventListener('animationend',()=>{root2.innerHTML='';},{once:true});}else{root2.innerHTML='';}}else{set({modal:returnTo});}};
+  let note='';
+  const ta=el('textarea',{class:'form-input',rows:'3',placeholder:'Add a note about this interaction (optional)',onInput:e=>{note=e.target.value;}});
+  const modal=el('div',{class:'modal-backdrop'},el('div',{class:'modal'},div('modal-header',el('div',{style:{display:'flex',alignItems:'center',gap:'8px'}},
+    (()=>{const ic=el('span',{style:{display:'flex',alignItems:'center',color:'var(--ink-2)'}});ic.innerHTML=m.icon;return ic;})(),
+    el('div',{},el('div',{class:'modal-title'},m.label),el('div',{class:'modal-subtitle'},c.name))),
+    el('button',{class:'close-btn',onClick:dismiss},'✕')),
+    div('form-group',ta),
+    el('div',{style:{display:'flex',gap:'8px'}},el('button',{class:'btn-secondary',style:{marginTop:'0'},onClick:dismiss},'Cancel'),el('button',{class:'btn-primary',style:{marginTop:'0'},onClick:()=>pingContact(contactId,channelKey,note,returnTo)},`Log ${m.label}`))));
+  setTimeout(()=>ta.focus(),40);
+  return modal;
+}
+
+function ContactFormModal(initial) {
+  const isEdit=!!initial?.id;
+  const form=initial?{...initial,lastPing:initial.lastPing?.split('T')[0]||''}:{name:'',role:'',company:'',status:S.cadences[0]?.id||'active',notes:'',nextStep:'',birthday:'',lastPing:new Date().toISOString().split('T')[0],mutuals:[]};
+  function field(label,key,type,placeholder){
+    let input;
+    if(type==='textarea')input=el('textarea',{class:'form-input',rows:'2',placeholder:placeholder||''});
+    else if(type==='select')input=el('select',{class:'form-input'},...S.cadences.map(c=>el('option',{value:c.id},`${c.label} (${fmtDays(c.days)} cadence)`)));
+    else input=el('input',{class:'form-input',type:type||'text',placeholder:placeholder||''});
+    if(type==='select')input.value=form[key];else input.value=form[key]||'';
+    input.addEventListener('input',e=>{form[key]=e.target.value;});
+    return div('form-group',el('label',{class:'form-label'},label),input);
+  }
+  const mutualsWrap=div('form-group');
+  mutualsWrap.appendChild(el('label',{class:'form-label'},'Mutuals'));
+  const selectedIds=new Set(form.mutuals||[]);
+  const chipArea=div('');chipArea.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;';
+  const searchInput=el('input',{class:'form-input',type:'text',placeholder:'Search contacts…'});
+  const listWrap=el('div',{style:'max-height:140px;overflow-y:auto;margin-top:6px;'});
+  const renderChips=()=>{chipArea.innerHTML='';selectedIds.forEach(id=>{const mc=S.contacts.find(c=>c.id===id);if(!mc||mc.id===form.id)return;const chip=el('span',{style:'display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--rule);border-radius:20px;font-size:12px;cursor:pointer;'},mc.name,' ×');chip.addEventListener('click',()=>{selectedIds.delete(id);form.mutuals=[...selectedIds];renderChips();renderList();});chipArea.appendChild(chip);});};
+  const renderList=()=>{listWrap.innerHTML='';const q=searchInput.value.toLowerCase();S.contacts.filter(c=>c.id!==form.id&&c.name.toLowerCase().includes(q)).forEach(c=>{const row=el('div',{style:`padding:8px 10px;border-radius:8px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:${selectedIds.has(c.id)?'var(--rule)':'transparent'};`},c.name);if(selectedIds.has(c.id))row.appendChild(el('span',{style:'color:var(--ink-3);font-size:11px;'},'✓'));row.addEventListener('click',()=>{if(selectedIds.has(c.id))selectedIds.delete(c.id);else selectedIds.add(c.id);form.mutuals=[...selectedIds];renderChips();renderList();});listWrap.appendChild(row);});};
+  searchInput.addEventListener('input',renderList);renderChips();renderList();
+  mutualsWrap.appendChild(chipArea);mutualsWrap.appendChild(searchInput);mutualsWrap.appendChild(listWrap);
+  return el('div',{class:'modal-backdrop'},el('div',{class:'modal'},div('modal-header',el('div',{class:'modal-title'},isEdit?'Edit Contact':'New Contact'),el('button',{class:'close-btn',onClick:()=>set({modal:null})},'✕')),
+    field('Name *','name','text','e.g. Marcus Delray'),field('Focus','role','text','e.g. Record Producer'),field('Associated With','company','text','e.g. Delray Sound Studios'),field('Cadence','status','select'),
+    (()=>{const f=field('Birthday','birthday','text','MM/DD/YYYY');applyDateMask(f.querySelector('input'));return f;})(),
+    field('Next Step','nextStep','text','e.g. Send demo package'),field('Notes','notes','textarea','Context about this person'),field('Last Connection','lastPing','date'),mutualsWrap,
+    el('button',{class:'btn-primary',onClick:()=>{if(form.name.trim())isEdit?editContact(form):addContact(form);}},isEdit?'Save Changes':'Add Contact'),
+    isEdit?el('button',{class:'btn-danger',onClick:()=>removeContact(initial.id)},'Remove Contact'):null));
+}
+
+function HistoryModal(contact) {
+  const fresh=S.contacts.find(c=>c.id===contact.id)||contact, hist=fresh.history||[];
+  const items=hist.length?hist.map(e=>{const m=channelOf(e.channel);const icon=m?.icon||e.icon||'';const verb=m?.verb||e.verb||'Contacted';const iconEl=el('div',{class:'history-icon'});if(icon)iconEl.innerHTML=icon;else iconEl.textContent='·';return div('history-item',iconEl,el('div',{class:'history-body'},el('div',{class:'history-verb'},verb),e.note?el('div',{class:'history-note'},e.note):null,el('div',{class:'history-date'},fmtDate(e.date))));}):[el('div',{class:'empty-state'},'No interactions logged yet.')];
+  return el('div',{class:'modal-backdrop'},el('div',{class:'modal modal-wide'},div('modal-header',el('div',{},el('div',{class:'modal-title'},fresh.name),el('div',{class:'modal-subtitle'},`${hist.length} interaction${hist.length!==1?'s':''}`)),el('button',{class:'close-btn',onClick:()=>set({modal:null})},'✕')),el('div',{style:{maxHeight:'420px',overflowY:'auto'}},...items)));
+}
+
+function addCadence(form) {
+  const id='cadence_'+uid();
+  const newCadence={id,label:form.label.trim(),days:form.days,colorIdx:form.colorIdx};
+  const cadences=[...S.cadences,newCadence];
+  saveCadences(cadences);rebuildStatus(cadences);set({cadences,modal:null});
+}
+function saveCadenceEdit(form) {
+  const cadences=S.cadences.map(c=>c.id===form.id?{...c,label:form.label.trim(),days:form.days,colorIdx:form.colorIdx}:c);
+  saveCadences(cadences);rebuildStatus(cadences);set({cadences,modal:null});
+}
+function deleteCadence(id) {
+  if(S.cadences.length<=1){set({modal:{type:'confirm',title:'Cannot Delete',confirmLabel:'OK',onConfirm:()=>{}}});return;}
+  const inUse=S.contacts.filter(c=>c.status===id).length;
+  const cadence=S.cadences.find(c=>c.id===id);
+  set({modal:{type:'confirm',title:'Delete Cadence?',confirmLabel:'Delete Cadence',onConfirm:()=>{
+    const fallback=S.cadences.find(c=>c.id!==id)?.id;
+    let contacts=S.contacts;
+    if(inUse>0){contacts=S.contacts.map(c=>c.status===id?{...c,status:fallback}:c);save(contacts);}
+    const cadences=S.cadences.filter(c=>c.id!==id);saveCadences(cadences);rebuildStatus(cadences);set({cadences,contacts,modal:null});
+  }}});
+}
+
+function addChannel(form) {
+  const id='channel_'+uid();
+  const channels=[...S.channels,{id,label:form.label.trim(),verb:form.verb.trim(),iconKey:form.iconKey}];
+  saveChannels(channels);PING_CHANNELS=channelsToConst(channels);set({channels,modal:null});
+}
+function saveChannelEdit(form) {
+  const channels=S.channels.map(m=>m.id===form.id?{...m,label:form.label.trim(),verb:form.verb.trim(),iconKey:form.iconKey}:m);
+  saveChannels(channels);PING_CHANNELS=channelsToConst(channels);set({channels,modal:null});
+}
+function deleteChannel(id) {
+  set({modal:{type:'confirm',title:'Delete Channel?',confirmLabel:'Delete Channel',onConfirm:()=>{const channels=S.channels.filter(m=>m.id!==id);saveChannels(channels);PING_CHANNELS=channelsToConst(channels);set({channels,modal:null});}}});
+}
+
+function renderSettings() {
+  const inner=document.getElementById('settings-inner'); if(!inner)return;
+  inner.innerHTML='';
+  const tab=S.settingsTab||'cadences';
+  const titleRow=div('feed-title-row');
+  titleRow.appendChild(el('div',{class:'feed-title'},tab==='cadences'?'Cadences':'Channels'));
+  const addBtn=el('button',{class:'add-btn',onClick:()=>set({modal:{type:tab==='cadences'?'cadence-add':'channel-add'}})});
+  addBtn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> New';
+  titleRow.appendChild(addBtn);inner.appendChild(titleRow);
+  if(tab==='cadences'){
+    const list=div('cadence-list');
+    S.cadences.forEach(cadence=>{
+      const col=CADENCE_COLORS[cadence.colorIdx]||CADENCE_COLORS[0];
+      const row=el('div',{class:'cadence-row',onClick:()=>set({modal:{type:'cadence-edit',cadence}})});
+      row.appendChild(el('span',{class:'cadence-color-swatch',style:{background:col.dot}}));
+      const info=div('cadence-info');
+      info.appendChild(el('div',{class:'cadence-name'},cadence.label));
+      const inUse=S.contacts.filter(c=>c.status===cadence.id).length;
+      info.appendChild(el('div',{class:'cadence-meta'},`${fmtDays(cadence.days)} · ${inUse} contact${inUse!==1?'s':''}`));
+      row.appendChild(info);
+      row.appendChild(el('span',{class:'cadence-pill',style:{background:col.bg,color:col.text}},cadence.label));
+      list.appendChild(row);
+    });
+    inner.appendChild(list);
+  } else {
+    const list=div('cadence-list');
+    S.channels.forEach(channel=>{
+      const row=el('div',{class:'cadence-row',onClick:()=>set({modal:{type:'channel-edit',channel}})});
+      const iconWrap=el('span',{class:'channel-icon-swatch'});iconWrap.innerHTML=iconSvg(channel.iconKey);row.appendChild(iconWrap);
+      const info=div('cadence-info');info.appendChild(el('div',{class:'cadence-name'},channel.label));info.appendChild(el('div',{class:'cadence-meta'},`e.g. ${channel.verb||'…'} today`));row.appendChild(info);list.appendChild(row);
+    });
+    inner.appendChild(list);
+  }
+}
+
+function renderOrbit() {
+  const inner=document.getElementById('orbit-inner'); if(!inner)return;
+  inner.innerHTML='';
+  const overdue=S.contacts.filter(isOverdue).length, totalContacts=S.contacts.length;
+  const seenPairs=new Set();
+  S.contacts.forEach(c=>{(c.mutuals||[]).forEach(mid=>{const key=[c.id,mid].sort().join('-');seenPairs.add(key);});});
+  const totalConnections=seenPairs.size;
+  const statsRow=el('div',{style:{display:'flex',gap:'1px',background:'var(--rule)',borderRadius:'12px',overflow:'hidden',marginTop:'8px',marginBottom:'24px'}});
+  [{label:'Network',value:String(totalContacts)},{label:'Connections',value:String(totalConnections)},{label:'Overdue',value:String(overdue)}].forEach(s=>{
+    const cell=el('div',{style:{flex:'1',background:'var(--card)',padding:'14px 8px',textAlign:'center'}});
+    cell.appendChild(el('div',{style:{fontSize:'22px',fontWeight:'700',color:'var(--ink)'}},s.value));
+    cell.appendChild(el('div',{style:{fontSize:'11px',color:'var(--ink-3)',marginTop:'2px',textTransform:'uppercase',letterSpacing:'0.6px',fontWeight:'500'}},s.label));
+    statsRow.appendChild(cell);
+  });
+
+  (function buildNetworkViz(){
+    const SVG_NS='http://www.w3.org/2000/svg';
+    function svgEl(name,attrs){const e=document.createElementNS(SVG_NS,name);if(attrs)for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);return e;}
+    function rng(seed){return function(){seed=(seed*9301+49297)%233280;return seed/233280;};}
+    function hexToRgb(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return[r,g,b];}
+    function blendColor(base,dark,t){return `rgb(${Math.round(base[0]+(dark[0]-base[0])*t)},${Math.round(base[1]+(dark[1]-base[1])*t)},${Math.round(base[2]+(dark[2]-base[2])*t)})`;}
+    function curvePath(x1,y1,x2,y2,cx,cy,idx){const mx=(x1+x2)/2,my=(y1+y2)/2,dx=x2-x1,dy=y2-y1;const len=Math.sqrt(dx*dx+dy*dy)||1,px=-dy/len,py=dx/len;const d1=Math.sqrt((x1-cx)**2+(y1-cy)**2),d2=Math.sqrt((x2-cx)**2+(y2-cy)**2);const bend=((d1+d2)/2/220)*len*0.30,sign=idx%2===0?1:-1;return `M${x1},${y1} Q${(mx+px*bend*sign).toFixed(2)},${(my+py*bend*sign).toFixed(2)} ${x2},${y2}`;}
+    const sortedCadences=[...S.cadences].sort((a,b)=>a.days-b.days);
+    const numTiers=sortedCadences.length,cx=250,cy=250,minRadius=45,maxRadius=170;
+    const minDays=sortedCadences[0].days,maxDays=sortedCadences[numTiers-1].days,dayRange=maxDays-minDays||1;
+    const tierRadii=sortedCadences.map(cadence=>{const t=(cadence.days-minDays)/dayRange;return minRadius+t*(maxRadius-minRadius);});
+    const tierSpeeds=sortedCadences.map((_,i)=>{const dir=i%2===0?1:-1;const magnitudes=[0.00005,0.000035,0.000065,0.00004,0.000055,0.00003,0.000045];return dir*magnitudes[i%magnitudes.length];});
+    const rand=rng(42);
+    const contacts=[];
+    sortedCadences.forEach((cadence,ti)=>{
+      const col=CADENCE_COLORS[cadence.colorIdx]||CADENCE_COLORS[0];
+      const baseRgb=hexToRgb(col.dot),darkRgb=[Math.max(0,baseRgb[0]-80),Math.max(0,baseRgb[1]-80),Math.max(0,baseRgb[2]-80)];
+      const inCadence=S.contacts.filter(c=>c.status===cadence.id),count=inCadence.length;
+      for(let i=0;i<count;i++){
+        const baseAngle=(i/Math.max(count,1))*Math.PI*2+(rand()-0.5)*0.08;
+        const name=inCadence[i].name||'';
+        const inits=name.split(' ').filter(Boolean).map(w=>w[0].toUpperCase()).slice(0,2).join('');
+        contacts.push({cadenceIdx:ti,radius:tierRadii[ti],baseAngle,speed:tierSpeeds[ti]*(0.4+rand()*0.6),driftAmp:tierRadii[ti]*0.20,driftFreq:0.00002+rand()*0.00003,driftPhase:rand()*Math.PI*2,baseRgb,darkRgb,degree:0,_r:0,initials:inits,contactId:inCadence[i].id,name:inCadence[i].name});
+      }
+    });
+    const idToVizIdx=new Map();
+    sortedCadences.forEach((cadence,ti)=>{
+      const inCadence=S.contacts.filter(c=>c.status===cadence.id);
+      let vizIdx=0;for(let ci=0;ci<ti;ci++)vizIdx+=S.contacts.filter(c=>c.status===sortedCadences[ci].id).length;
+      inCadence.forEach((c,i)=>idToVizIdx.set(c.id,vizIdx+i));
+    });
+    const mutualPairs=[],seen=new Set();
+    S.contacts.forEach(c=>{const ai=idToVizIdx.get(c.id);if(ai===undefined)return;(c.mutuals||[]).forEach(mid=>{const bi=idToVizIdx.get(mid);if(bi===undefined)return;const key=ai<bi?`${ai}-${bi}`:`${bi}-${ai}`;if(seen.has(key))return;seen.add(key);mutualPairs.push([ai,bi]);contacts[ai].degree++;contacts[bi].degree++;});});
+    const n=contacts.length,showInitials=n<60;
+    const baseDotR=n<=10?10:n<=20?8:n<=40?7:n<=80?5.5:4;
+    const maxDeg=contacts.reduce((m,c)=>Math.max(m,c.degree),1);
+    const svg=svgEl('svg',{viewBox:'0 0 500 500',style:'display:block;width:100%;height:auto;'});
+    const edgeG=svgEl('g',{fill:'none',stroke:'var(--ink)','stroke-opacity':'0.15','stroke-width':'0.7','stroke-linecap':'round'});
+    svg.appendChild(edgeG);
+    const pathEls=mutualPairs.map(()=>{const p=svgEl('path');edgeG.appendChild(p);return p;});
+    const dotG=svgEl('g');svg.appendChild(dotG);
+    const dotEls=contacts.map(c=>{
+      const degNorm=maxDeg>0?c.degree/maxDeg:0,r=baseDotR*(1+0.6*degNorm);c._r=r;
+      const darkT=Math.pow(degNorm,0.7)*0.65,fill=blendColor(c.baseRgb,c.darkRgb,darkT);
+      const g=svgEl('g');
+      const circle=svgEl('circle',{r:r.toFixed(2),fill,stroke:'var(--bg)','stroke-width':'0.8'});g.appendChild(circle);
+      if(showInitials&&c.initials){const textFill=darkT>0.45?'var(--bg)':'var(--ink)';const txt=svgEl('text',{'text-anchor':'middle','dominant-baseline':'central','font-size':(r*0.72).toFixed(1),'font-weight':'600',fill:textFill,'pointer-events':'none','font-family':'Inter,system-ui,sans-serif'});txt.textContent=c.initials;g.appendChild(txt);}
+      g.style.cursor='pointer';dotG.appendChild(g);return g;
+    });
+    const tooltip=el('div',{style:'position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);padding:4px 9px;border-radius:6px;font-size:12px;font-weight:500;white-space:nowrap;opacity:0;transition:opacity 0.12s;z-index:9999;font-family:Inter,system-ui,sans-serif;'});
+    document.body.appendChild(tooltip);
+    dotEls.forEach((g,i)=>{const c=contacts[i];g.addEventListener('mouseenter',()=>{tooltip.textContent=c.name;tooltip.style.opacity='1';});g.addEventListener('mousemove',e=>{tooltip.style.left=(e.clientX+12)+'px';tooltip.style.top=(e.clientY-28)+'px';});g.addEventListener('mouseleave',()=>{tooltip.style.opacity='0';});g.addEventListener('click',()=>{tooltip.style.opacity='0';set({modal:{type:'contact',contactId:c.contactId}});});});
+    svg.appendChild(svgEl('circle',{cx,cy,r:28,fill:'var(--ink)',opacity:'0.75'}));
+    const jbLabel=svgEl('text',{x:cx,y:cy,'text-anchor':'middle','dominant-baseline':'central',fill:'var(--bg)','font-size':12,'font-weight':600,'font-family':'Inter,system-ui,sans-serif'});jbLabel.textContent='JB';svg.appendChild(jbLabel);
+    const wrap=el('div',{style:{marginBottom:'24px'}});wrap.appendChild(svg);inner.appendChild(wrap);
+    let rafId=null;
+    function frame(t){
+      const pos=contacts.map(c=>{const angle=c.baseAngle+c.speed*t;const drift=c.driftAmp*Math.sin(c.driftFreq*t+c.driftPhase);return{x:cx+Math.cos(angle)*(c.radius+drift),y:cy+Math.sin(angle)*(c.radius+drift)};});
+      dotEls.forEach((g,i)=>g.setAttribute('transform',`translate(${pos[i].x.toFixed(2)},${pos[i].y.toFixed(2)})`));
+      pathEls.forEach((p,i)=>{const[a,b]=mutualPairs[i];p.setAttribute('d',curvePath(pos[a].x,pos[a].y,pos[b].x,pos[b].y,cx,cy,i));});
+      rafId=requestAnimationFrame(frame);
+    }
+    rafId=requestAnimationFrame(frame);
+    const observer=new MutationObserver(()=>{const pane=document.getElementById('orbit-pane');if(pane&&pane.style.display==='none'){cancelAnimationFrame(rafId);tooltip.remove();observer.disconnect();}});
+    const pane=document.getElementById('orbit-pane');if(pane)observer.observe(pane,{attributes:true,attributeFilter:['style']});
+  })();
+
+  inner.appendChild(statsRow);
+  inner.appendChild(el('button',{class:'btn-logout',style:{marginTop:'32px'},onClick:()=>set({modal:{type:'confirm',title:'Log out?',confirmLabel:'Log Out',onConfirm:()=>set({modal:null})}})}, 'Log Out'));
+}
+
+function CadenceFormModal(initial) {
+  const isEdit=!!initial;
+  const form=isEdit?{...initial}:{label:'',days:30,colorIdx:0};
+  let currentDays=form.days,currentColorIdx=form.colorIdx;
+  const initUnit=currentDays%30===0?'months':currentDays%7===0?'weeks':'days';
+  const initNum=initUnit==='months'?currentDays/30:initUnit==='weeks'?currentDays/7:currentDays;
+  const nameInput=el('input',{class:'form-input',type:'text',placeholder:'e.g. Close Friends',value:form.label,onInput:e=>{form.label=e.target.value;}});
+  const freqNum=el('input',{class:'form-input',type:'number',min:'1',value:String(initNum),style:{width:'80px',textAlign:'center'}});
+  const freqUnit=el('select',{class:'form-input',style:{flex:'1'}},el('option',{value:'days'},'day'),el('option',{value:'weeks'},'week'),el('option',{value:'months'},'month'));
+  freqUnit.value=initUnit;
+  const updateUnits=(n)=>{const plural=n>1;freqUnit.options[0].text=plural?'days':'day';freqUnit.options[1].text=plural?'weeks':'week';freqUnit.options[2].text=plural?'months':'month';};
+  const updateDays=()=>{const n=Math.max(1,parseInt(freqNum.value)||1);freqNum.value=String(n);updateUnits(n);const u=freqUnit.value;currentDays=u==='months'?n*30:u==='weeks'?n*7:n;form.days=currentDays;};
+  freqNum.addEventListener('input',updateDays);freqUnit.addEventListener('change',updateDays);updateUnits(initNum);
+  const colorGrid=div('cadence-color-grid');
+  CADENCE_COLORS.forEach((col,idx)=>{const opt=el('button',{class:`cadence-color-option${idx===currentColorIdx?' selected':''}`,style:{background:col.dot},title:`Color ${idx+1}`,onClick:()=>{currentColorIdx=idx;form.colorIdx=idx;colorGrid.querySelectorAll('.cadence-color-option').forEach((el2,i)=>{el2.classList.toggle('selected',i===idx);});}});colorGrid.appendChild(opt);});
+  const onSave=()=>{if(!form.label.trim()){nameInput.focus();return;}form.days=currentDays;form.colorIdx=currentColorIdx;if(isEdit)saveCadenceEdit({...initial,...form});else addCadence(form);};
+  return el('div',{class:'modal-backdrop'},el('div',{class:'modal'},div('modal-header',el('div',{},el('div',{class:'modal-title'},isEdit?'Edit Cadence':'New Cadence'),el('div',{class:'modal-subtitle'},'')),el('button',{class:'close-btn',onClick:()=>set({modal:null})},'✕')),
+    div('form-group',el('label',{class:'form-label'},'Name'),nameInput),
+    div('form-group',el('label',{class:'form-label'},'Color'),colorGrid),
+    div('form-group',el('label',{class:'form-label'},'Frequency'),el('div',{style:{display:'flex',gap:'8px',alignItems:'center'}},freqNum,freqUnit)),
+    el('button',{class:'btn-primary',onClick:onSave},isEdit?'Save Changes':'Create Cadence'),
+    isEdit?el('button',{class:'btn-danger',onClick:()=>{set({modal:null});deleteCadence(initial.id);}},'Delete Cadence'):null));
+}
+
+function ChannelFormModal(initial) {
+  const isEdit=!!initial;
+  const form=isEdit?{...initial}:{label:'',verb:'',iconKey:CHANNEL_ICONS[0].key};
+  let currentIconKey=form.iconKey||CHANNEL_ICONS[0].key;
+  const nameInput=el('input',{class:'form-input',type:'text',placeholder:'e.g. LinkedIn',value:form.label,onInput:e=>{form.label=e.target.value;}});
+  const verbInput=el('input',{class:'form-input',type:'text',placeholder:'e.g. Messaged on LinkedIn',value:form.verb,onInput:e=>{form.verb=e.target.value;}});
+  const iconGrid=div('channel-icon-grid');
+  CHANNEL_ICONS.forEach(ic=>{const btn=el('button',{class:`channel-icon-option${currentIconKey===ic.key?' selected':''}`,title:ic.key,onClick:()=>{currentIconKey=ic.key;form.iconKey=ic.key;iconGrid.querySelectorAll('.channel-icon-option').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');}});btn.innerHTML=ic.svg;iconGrid.appendChild(btn);});
+  const onSave=()=>{if(!form.label.trim()){nameInput.focus();return;}if(!form.verb.trim()){verbInput.focus();return;}form.iconKey=currentIconKey;if(isEdit)saveChannelEdit({...initial,...form});else addChannel(form);};
+  return el('div',{class:'modal-backdrop'},el('div',{class:'modal'},div('modal-header',el('div',{},el('div',{class:'modal-title'},isEdit?'Edit Channel':'New Channel'),el('div',{class:'modal-subtitle'},'')),el('button',{class:'close-btn',onClick:()=>set({modal:null})},'✕')),
+    div('form-group',el('label',{class:'form-label'},'Name'),nameInput),
+    div('form-group',el('label',{class:'form-label'},'Past-tense Verb'),verbInput),
+    div('form-group',el('label',{class:'form-label'},'Icon'),iconGrid),
+    el('button',{class:'btn-primary',onClick:onSave},isEdit?'Save Changes':'Create Channel'),
+    isEdit?el('button',{class:'btn-danger',onClick:()=>{set({modal:null});deleteChannel(initial.id);}},'Delete Channel'):null));
+}
+
+function renderFeedOnly() {
+  if(S.filter&&!STATUS[S.filter])S.filter=null;
+  const contacts=filtered();
+  const cl=document.getElementById('card-list');
+  if(cl){cl.innerHTML='';if(!contacts.length){cl.appendChild(el('div',{class:'empty-state'},'No contacts found.'));}else{contacts.forEach(c=>cl.appendChild(ContactCard(c)));}}
+}
+
+function render(skipModal) {
+  if(S.filter&&!STATUS[S.filter])set({filter:null},true);
+  if(S.view==='settings'){renderSettings();if(!skipModal)renderModal();return;}
+  if(S.view==='orbit'){renderOrbit();if(!skipModal)renderModal();return;}
+  const contacts=filtered();
+  const fr=document.getElementById('filter-row');
+  if(fr){
+    fr.innerHTML='';
+    S.cadences.forEach(cadence=>{
+      const cfg=STATUS[cadence.id];if(!cfg)return;
+      const active=S.filter===cadence.id;
+      const chip=el('button',{class:`chip${active?' active-cadence-'+cadence.id:''}`,onClick:()=>set({filter:S.filter===cadence.id?null:cadence.id})},el('span',{class:'chip-dot',style:{background:cfg.dot}}),txt(cfg.label));
+      fr.appendChild(chip);
+    });
+    const wrap=fr.parentElement;
+    const updateFade=()=>{const atEnd=fr.scrollLeft+fr.clientWidth>=fr.scrollWidth-1;const atStart=fr.scrollLeft<=0;wrap.classList.toggle('at-end',atEnd);wrap.classList.toggle('at-start',atStart);};
+    fr.removeEventListener('scroll',fr._fadeHandler);fr._fadeHandler=updateFade;fr.addEventListener('scroll',updateFade);updateFade();
+  }
+  const ftr=document.getElementById('focus-tag-row'), ftw=document.getElementById('focus-tag-wrap');
+  if(ftr&&ftw){
+    const words=new Set();S.contacts.forEach(c=>{if(c.role)c.role.trim().split(/\s+/).forEach(w=>{if(w)words.add(w);});});
+    const tags=[...words].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+    if(tags.length){ftr.innerHTML='';tags.forEach(word=>{const active=S.focusFilter===word;const tag=el('button',{class:`focus-tag${active?' active':''}`,onClick:()=>set({focusFilter:S.focusFilter===word?null:word})},word);ftr.appendChild(tag);});}
+    else{ftw.classList.add('hidden');}
+  }
+  const cl=document.getElementById('card-list');
+  if(cl){cl.innerHTML='';if(!contacts.length){cl.appendChild(el('div',{class:'empty-state'},'No contacts found.'));}else{contacts.forEach(c=>cl.appendChild(ContactCard(c)));}}
+  const si=document.getElementById('search-input');if(si&&si.value!==S.search)si.value=S.search;
+  if(!skipModal)renderModal();
+}
+
+function onSearch(val){set({search:val});}
+function openAdd(){set({modal:{type:'add'}});}
+function navPress(el,item,tab){el.classList.add('pressing');setTimeout(()=>{el.classList.remove('pressing');navTo(item,tab);},100);}
+function navTo(item,tabOrContactId){
+  const settingsTab=item==='settings'?(tabOrContactId||'cadences'):null;
+  ['contacts','settings','channels'].forEach(k=>{const b=document.getElementById(`nav-${k}`);if(!b)return;if(item==='settings'){b.classList.toggle('active',k===(settingsTab==='channels'?'channels':'settings'));}else{b.classList.toggle('active',k===item);}});
+  const userEl=document.querySelector('.sidebar-user');if(userEl)userEl.classList.toggle('active',item==='orbit');
+  const feed=document.querySelector('.feed'),sPane=document.getElementById('settings-pane'),oPane=document.getElementById('orbit-pane');
+  if(feed)feed.style.display=item==='contacts'?'':'none';
+  if(sPane)sPane.style.display=item==='settings'?'':'none';
+  if(oPane)oPane.style.display=item==='orbit'?'':'none';
+  if(item==='settings'){set({view:'settings',settingsTab},true);renderSettings();}
+  else if(item==='orbit'){set({view:'orbit'},true);renderOrbit();}
+  else{set({view:'contacts'});}
+}
+
+document.getElementById('modal-root').addEventListener('click',e=>{if(e.target.classList.contains('modal-backdrop'))set({modal:null});});
+document.getElementById('modal-root-2').addEventListener('click',e=>{if(e.target.classList.contains('modal-backdrop'))set({modal:S.modal?.returnTo||null});});
+
+// Clear stale localStorage so fresh seed loads
+localStorage.removeItem('mura_v2');
+localStorage.removeItem('mura_cohorts_v1');
+
+render();
+</script>
+</body>
+</html>
